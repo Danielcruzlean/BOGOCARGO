@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Nuevo Pedido - BOGOCARGO{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-xl rounded-2xl p-6 md:p-10 border border-gray-100">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Crear Nuevo Pedido</h1>
+        <p class="text-lg text-blue-600 font-medium mb-6">Empresa Minorista: {{ minorista.nombre }}</p>
+
+        <form method="post" id="pedido-form">
+            {% csrf_token %}
+
+            <!-- Secciones del Pedido Principal (Form) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-b pb-6 mb-6">
+                <h2 class="col-span-full text-2xl font-semibold text-gray-800 border-b pb-2 mb-4">Datos de Envío</h2>
+                
+                {% for field in form %}
+                    {% if field.name != 'minorista' and field.name != 'mayorista' and field.name != 'peso_total' and field.name != 'estado' %}
+                        <div class="col-span-1">
+                            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ field.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- Renderizar campos ocultos si es necesario -->
+                        {{ field }}
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Secciones de Detalle de Pedido (Formset) -->
+            <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-4 flex justify-between items-center">
+                Detalles de Productos
+                <button type="button" id="add-item-btn" class="flex items-center text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded-full transition duration-200 shadow-md">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    Añadir Producto
+                </button>
+            </h2>
+
+            <div id="formset-container" class="space-y-4">
+                {{ formset.management_form }}
+
+                <!-- Encabezados de la Tabla (Versión Desktop) -->
+                <div class="hidden md:grid grid-cols-12 gap-4 text-sm font-semibold text-gray-600 border-b pb-2">
+                    <div class="col-span-6">Producto</div>
+                    <div class="col-span-3">Cantidad</div>
+                    <div class="col-span-2">Acción</div>
+                </div>
+
+                {% for form_detalle in formset %}
+                    <div class="formset-row border border-gray-200 rounded-lg p-4 grid grid-cols-12 gap-4 items-center bg-gray-50 transition duration-150">
+                        <!-- Producto (Columna 1: 6/12) -->
+                        <div class="col-span-12 md:col-span-6">
+                            <label class="md:hidden block text-xs font-medium text-gray-500 mb-1">Producto:</label>
+                            {{ form_detalle.producto }}
+                        </div>
+                        
+                        <!-- Cantidad (Columna 2: 3/12) -->
+                        <div class="col-span-12 sm:col-span-6 md:col-span-3">
+                            <label class="md:hidden block text-xs font-medium text-gray-500 mb-1">Cantidad:</label>
+                            {{ form_detalle.cantidad }}
+                        </div>
+
+                        <!-- Acción (Columna 3: 2/12) -->
+                        <div class="col-span-12 sm:col-span-6 md:col-span-2 flex justify-end">
+                            {% if form_detalle.instance.pk %}
+                                {{ form_detalle.DELETE }}
+                                <label for="{{ form_detalle.DELETE.id_for_label }}" class="text-red-500 text-sm cursor-pointer ml-2 hover:text-red-700">Eliminar</label>
+                            {% elif form_detalle.DELETE %}
+                                <button type="button" class="remove-item-btn text-red-500 hover:text-red-700 transition duration-200 p-2 rounded-full border border-red-200">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Campos Ocultos para IDs de detalle y errores -->
+                        <div class="hidden">
+                            {{ form_detalle.id }}
+                        </div>
+                        {% if form_detalle.non_field_errors %}
+                            <div class="col-span-full text-red-500 text-sm mt-1 p-2 bg-red-100 rounded-lg">{{ form_detalle.non_field_errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-8 pt-4 border-t">
+                <button type="submit" class="w-full md:w-auto px-6 py-3 text-lg font-bold text-white bg-amber-500 rounded-lg hover:bg-amber-400 transition duration-300 shadow-2xl">
+                    Confirmar Pedido y Solicitar Recogida
+                </button>
+                <a href="{% url 'listar_pedidos' %}" class="ml-4 text-blue-600 hover:text-blue-800 font-medium">Cancelar</a>
+            </div>
+        </form>
+
+        <!-- Script para la gestión dinámica del Formset -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const formsetContainer = document.getElementById('formset-container');
+                const addItemBtn = document.getElementById('add-item-btn');
+                const totalForms = document.querySelector('[name$="TOTAL_FORMS"]');
+                const emptyForm = document.querySelector('.formset-row:last-child').outerHTML.replace(/__prefix__/g, '{{ formset.total_form_count|default:"0" }}');
+
+                // Función para actualizar los índices de los formularios
+                function updateFormIndexes() {
+                    let total = parseInt(totalForms.value);
+                    const rows = formsetContainer.querySelectorAll('.formset-row');
+                    
+                    rows.forEach((row, index) => {
+                        row.innerHTML = row.innerHTML.replace(new RegExp('-' + '\\d+' + '-', 'g'), '-' + index + '-');
+                        row.querySelectorAll('input, select').forEach(input => {
+                            if (input.id) input.id = input.id.replace(new RegExp('-' + '\\d+' + '-'), '-' + index + '-');
+                            if (input.name) input.name = input.name.replace(new RegExp('-' + '\\d+' + '-'), '-' + index + '-');
+                        });
+                    });
+                    totalForms.value = rows.length;
+                }
+
+                // Función para añadir un nuevo formulario
+                addItemBtn.addEventListener('click', function() {
+                    const newRow = emptyForm.replace(new RegExp('-{{ formset.total_form_count|default:"0" }}', 'g'), '-' + totalForms.value);
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = newRow;
+                    
+                    // Añadir el botón de eliminar a la nueva fila
+                    const deleteButton = `
+                        <button type="button" class="remove-item-btn text-red-500 hover:text-red-700 transition duration-200 p-2 rounded-full border border-red-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>`;
+                    const actionContainer = tempDiv.querySelector('.formset-row .md\\:col-span-2.flex');
+                    if (actionContainer) {
+                        actionContainer.innerHTML = deleteButton;
+                    }
+
+
+                    formsetContainer.appendChild(tempDiv.firstChild);
+                    updateFormIndexes();
+                });
+
+                // Función para eliminar un formulario
+                formsetContainer.addEventListener('click', function(e) {
+                    if (e.target.closest('.remove-item-btn')) {
+                        const row = e.target.closest('.formset-row');
+                        row.remove();
+                        updateFormIndexes();
+                    }
+                });
+
+                // Se inicializa el total de formularios con los existentes
+                updateFormIndexes();
+            });
+        </script>
+        
+        <!-- Estilos para los campos de formulario para que se vean bien con Tailwind -->
+        <style>
+            /* Aplicar estilos a todos los campos de formulario generados por Django */
+            .grid input, .grid select, .grid textarea {
+                width: 100%;
+                padding: 0.5rem 0.75rem;
+                border-radius: 0.5rem; /* rounded-lg */
+                border: 1px solid #d1d5db; /* border-gray-300 */
+                font-size: 0.875rem; /* text-sm */
+                transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            }
+
+            .grid input:focus, .grid select:focus, .grid textarea:focus {
+                border-color: #3b82f6; /* focus:border-blue-500 */
+                ring: 2px;
+                ring-color: #60a5fa; /* focus:ring-blue-500 */
+                outline: none;
+            }
+        </style>
+    </div>
+</div>
+{% endblock %}

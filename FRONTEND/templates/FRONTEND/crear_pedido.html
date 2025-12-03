@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Nueva Orden de Envío</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+        }
+        /* Estilos personalizados para el foco en inputs */
+        input:focus, select:focus, textarea:focus {
+            border-color: #4f46e5; /* indigo-600 */
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-gray-900 text-white shadow-md p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <span class="text-xl font-bold">BogoCargo</span> <nav class="space-x-4 text-sm hidden sm:block">
+                <a href="#" class="hover:text-gray-400">Inicio</a>
+                <a href="/listar-pedidos/" class="hover:text-gray-400">Mis Pedidos</a>
+                <a href="#" class="hover:text-gray-400">Perfil</a>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="container mx-auto p-4 sm:p-8 lg:p-12">
+        <div class="bg-white shadow-2xl rounded-2xl p-6 sm:p-10 max-w-4xl mx-auto">
+
+            <div class="border-b-2 border-indigo-100 pb-4 mb-8">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">
+                    Registrar una Nueva Orden
+                </h1>
+                <p class="mt-2 text-gray-500">
+                    Tu rol actual es: <strong class="text-indigo-600">MINORISTA (Simulado)</strong>. Completa los detalles de tu envío.
+                </p>
+            </div>
+            
+            <form method="POST" action="/crear_pedido/" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div>
+                        <label for="empresa_mayorista" class="block text-sm font-medium text-gray-700 mb-1">Empresa Mayorista (Distribuidor)</label>
+                        <select id="empresa_mayorista" name="empresa_mayorista" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150 appearance-none bg-white">
+                            <option value="">Seleccione la empresa distribuidora...</option>
+                            <option value="Mayorista_A">Distribuidora Alfa</option>
+                            <option value="Mayorista_B">Logística Beta</option>
+                            <option value="Mayorista_C">Transportes Gamma</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="fecha_recoleccion" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Recolección Deseada</label>
+                        <input type="date" id="fecha_recoleccion" name="fecha_recoleccion" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150">
+                    </div>
+
+                    <div>
+                        <label for="origen" class="block text-sm font-medium text-gray-700 mb-1">Dirección de Origen</label>
+                        <input type="text" id="origen" name="origen" required
+                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                            placeholder="Ej: Calle 26 # 68B-50, Bogotá">
+                    </div>
+
+                    <div>
+                        <label for="destino" class="block text-sm font-medium text-gray-700 mb-1">Dirección de Destino</label>
+                        <input type="text" id="destino" name="destino" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                            placeholder="Ej: Carrera 43A # 1-50, Medellín">
+                    </div>
+
+                    <div>
+                        <label for="tipo_mercancia" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Mercancía</label>
+                        <select id="tipo_mercancia" name="tipo_mercancia" required
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150 appearance-none bg-white">
+                            <option value="">Seleccione...</option>
+                            <option value="Documentos">Documentos</option>
+                            <option value="CargaSeca">Carga Seca (Cajas, Paquetes)</option>
+                            <option value="Refrigerado">Refrigerado</option>
+                            <option value="Peligroso">Material Peligroso</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="pt-6 border-t border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Detalles de la Carga</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                        <div>
+                            <label for="peso" class="block text-sm font-medium text-gray-700 mb-1">Peso Total (Kg)</label>
+                            <input type="number" id="peso" name="peso" step="0.01" required min="0.1"
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="Ej: 15.5">
+                        </div>
+
+                        <div>
+                            <label for="volumen" class="block text-sm font-medium text-gray-700 mb-1">Volumen (m³)</label>
+                            <input type="number" id="volumen" name="volumen" step="0.01" min="0"
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="Ej: 0.5">
+                        </div>
+                        
+                        <div>
+                            <label for="num_paquetes" class="block text-sm font-medium text-gray-700 mb-1">Número de Paquetes/Unidades</label>
+                            <input type="number" id="num_paquetes" name="num_paquetes" required min="1"
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="Ej: 3">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-gray-200">
+                    <label for="observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones / Descripción detallada</label>
+                    <textarea id="observaciones" name="observaciones" rows="4"
+                                class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="Ej: Contenido frágil. Contactar 1 hora antes de la entrega."></textarea>
+                </div>
+
+                <div class="flex justify-end pt-6">
+                    <button type="submit"
+                            class="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-105">
+                        <svg class="w-5 h-5 inline-block mr-2 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Confirmar y Enviar Pedido
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </main>
+
+    <script>
+        // JavaScript para limitar el campo de fecha a la fecha actual o futura
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateInput = document.getElementById('fecha_recoleccion');
+            
+            // 1. Obtener la fecha de hoy
+            const today = new Date();
+            
+            // 2. Formatear la fecha como YYYY-MM-DD
+            // Importante: getMonth() es 0-indexado, por eso se suma 1.
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            
+            const todayString = `${year}-${month}-${day}`;
+
+            // 3. Establecer el atributo 'min' del input de fecha
+            dateInput.setAttribute('min', todayString);
+            
+            // Opcional: Establecer el valor por defecto a mañana para mejor UX
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+            const tomorrowYear = tomorrow.getFullYear();
+            const tomorrowMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const tomorrowDay = String(tomorrow.getDate()).padStart(2, '0');
+            const tomorrowString = `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`;
+            
+            dateInput.value = tomorrowString;
+        });
+    </script>
+</body>
+</html>

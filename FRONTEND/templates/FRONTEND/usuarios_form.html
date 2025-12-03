@@ -1,0 +1,72 @@
+{% extends 'FRONTEND/base.html' %} 
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">{{ titulo }}</h4>
+                </div>
+                <div class="card-body">
+                    {% include 'FRONTEND/includes/messages.html' %} 
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email (Username)</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email|default:'' }}" 
+                                {% if usuario %}readonly{% endif %} required>
+                            {% if usuario %}
+                                <div class="form-text">El email no puede ser modificado después de la creación.</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ usuario.nombre|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="apellido" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="apellido" name="apellido" value="{{ usuario.apellido|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipo" class="form-label">Rol de Usuario (Tipo)</label>
+                            <select class="form-select" id="tipo" name="tipo" required>
+                                {% for tipo in tipos_usuario %}
+                                    <option value="{{ tipo }}" 
+                                    {% if usuario and usuario.tipo == tipo %}selected{% endif %}>
+                                        {{ tipo|capfirst }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Contraseña 
+                                {% if usuario %}(Dejar vacío para no cambiar){% endif %}
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                {% if not usuario %}required{% endif %}>
+                            {% if not usuario %}
+                                <div class="form-text">Requerido solo para la creación.</div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            {% if usuario %}Actualizar Usuario{% else %}Crear Usuario{% endif %}
+                        </button>
+                        <a href="{% url 'frontend:usuarios_list' %}" class="btn btn-secondary w-100 mt-2">Cancelar y Volver</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

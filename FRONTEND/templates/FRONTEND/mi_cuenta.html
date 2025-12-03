@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta | Acceso BOGOCARGO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+        }
+        input:focus {
+            border-color: #4f46e5; /* indigo-600 */
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.5);
+        }
+        [x-cloak] { display: none !important; }
+        
+        /* Estilos de mensajes para Django */
+        .msg-error { background-color: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+        .msg-success { background-color: #d1fae5; border-color: #10b981; color: #065f46; }
+        .msg-warning { background-color: #fef3c7; border-color: #f59e0b; color: #92400e; }
+    </style>
+</head>
+<body>
+    {% include 'FRONTEND/_header.html' %}
+    
+    <main class="container mx-auto p-4 sm:p-8 lg:p-12">
+        <div class="bg-white shadow-2xl rounded-2xl p-6 sm:p-10 max-w-lg mx-auto">
+
+            <h1 class="text-3xl font-extrabold text-gray-800 text-center mb-8 border-b pb-4">
+                Acceso a la Plataforma BOGOCARGO
+            </h1>
+
+            {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for message in messages %}
+                        <div class="p-3 border-l-4 rounded-lg shadow-sm 
+                            {% if message.tags == 'error' %} msg-error
+                            {% elif message.tags == 'success' %} msg-success
+                            {% elif message.tags == 'warning' %} msg-warning
+                            {% else %} bg-gray-100 border-gray-500 text-gray-800
+                            {% endif %}" 
+                            role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div x-data="{ currentTab: 'login' }" class="w-full">
+                
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button @click="currentTab = 'login'" 
+                            :class="{ 'border-indigo-600 text-indigo-600': currentTab === 'login', 'border-transparent text-gray-500 hover:text-gray-700': currentTab !== 'login' }"
+                            class="flex-1 py-3 px-1 text-center font-medium text-lg border-b-2 transition duration-300">
+                        Iniciar Sesión
+                    </button>
+                    <button @click="currentTab = 'register'" 
+                            :class="{ 'border-indigo-600 text-indigo-600': currentTab === 'register', 'border-transparent text-gray-500 hover:text-gray-700': currentTab !== 'register' }"
+                            class="flex-1 py-3 px-1 text-center font-medium text-lg border-b-2 transition duration-300">
+                        Registrarse
+                    </button>
+                </div>
+
+                <div x-show="currentTab === 'login'" x-transition:enter.duration.500ms x-cloak>
+                    <form method="POST" action="{% url 'frontend:login' %}" class="space-y-6">
+                        {% csrf_token %}
+                        <p class="text-gray-600 text-sm mb-4">Ingresa tus credenciales para acceder a tu cuenta.</p>
+                        
+                        <div>
+                            <label for="login_user" class="block text-sm font-medium text-gray-700 mb-1">Usuario o Email</label>
+                            <input type="text" id="login_user" name="username" required
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="tu.usuario@bogocargo.com">
+                        </div>
+
+                        <div>
+                            <label for="login_pass" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                            <input type="password" id="login_pass" name="password" required
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="Mínimo 8 caracteres">
+                        </div>
+                        
+                        <div class="pt-2">
+                            <button type="submit"
+                                        class="w-full px-4 py-3 bg-indigo-600 text-white font-bold text-lg rounded-xl shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 transition duration-300">
+                                Iniciar Sesión
+                            </button>
+                        </div>
+                        
+                        <div class="text-center text-sm text-gray-500 mt-4">
+                            <a href="{% url 'password_reset' %}" class="text-indigo-600 hover:text-indigo-800">¿Olvidaste tu contraseña?</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div x-show="currentTab === 'register'" x-transition:enter.duration.500ms x-cloak>
+                    <form method="POST" action="{% url 'frontend:register' %}" class="space-y-6">
+                        {% csrf_token %}
+                        <p class="text-gray-600 text-sm mb-4">Crea una cuenta y selecciona tu rol principal en la plataforma.</p>
+                        
+                        <div>
+                            <label for="reg_nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                            <input type="text" id="reg_nombre" name="full_name" required
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150">
+                        </div>
+                        
+                        <div>
+                            <label for="reg_email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                            <input type="email" id="reg_email" name="email" required
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="ejemplo@correo.com">
+                        </div>
+                        
+                        <div>
+                            <label for="reg_role" class="block text-sm font-medium text-gray-700 mb-1">Selecciona tu Rol</label>
+                            <select id="reg_role" name="role" required
+                                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150 appearance-none bg-white">
+                                <option value="">--- Seleccionar ---</option>
+                                <option value="MINORISTA">MINORISTA (Necesito hacer envíos)</option>
+                                <option value="CONDUCTOR">CONDUCTOR (Ofrezco servicios de carga)</option>
+                                <option value="ADMIN">ADMIN (Administración del sistema)</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Tu rol determinará las vistas y permisos que tendrás.</p>
+                        </div>
+
+                        <div>
+                            <label for="reg_pass" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                            <input type="password" id="reg_pass" name="password" required
+                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="Mínimo 8 caracteres">
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit"
+                                        class="w-full px-4 py-3 bg-emerald-600 text-white font-bold text-lg rounded-xl shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500 transition duration-300">
+                                Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            </div>
+    </main>
+    <script src="//unpkg.com/alpinejs" defer></script>
+</body>
+</html>
