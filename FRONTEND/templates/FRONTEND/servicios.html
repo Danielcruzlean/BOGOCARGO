@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestros Servicios | BOGOCARGO</title> 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    
+    {% include 'FRONTEND/_header_publico.html' with active_page='servicios' %}
+
+    <main class="flex-grow py-16">
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl font-extrabold text-gray-900 mb-4">
+                    Conectando Bogotá: Nuestros Roles
+                </h1>
+                <p class="text-xl text-gray-600 max-w-4xl mx-auto">
+                    BOGOCARGO es el puente logístico que une a los principales actores de la cadena de suministro en la capital.
+                </p>
+            </div>
+
+
+                <div class="bg-white p-8 rounded-2xl shadow-2xl border-t-4 border-green-600 transition duration-300 hover:shadow-3xl">
+                    <div class="text-green-600 mb-4">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3">Minoristas</h2>
+                    <p class="text-gray-700 mb-4">
+                        Recibe los pedidos de tus mayoristas de forma eficiente, rastrea tus entregas y gestiona tus inventarios sin fricciones.
+                    </p>
+                    <ul class="space-y-2 text-gray-600 list-disc list-inside">
+                        <li>Seguimiento de pedidos en tiempo real.</li>
+                        <li>Notificaciones de estado de entrega.</li>
+                        <li>Recepción segura y comprobada.</li>
+                    </ul>
+                    <a href="{% url 'frontend:mi_cuenta' %}" class="mt-6 inline-block text-green-600 font-semibold hover:text-green-800 transition duration-150">
+                        Quiero ser Minorista &rarr;
+                    </a>
+                </div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-2xl border-t-4 border-yellow-600 transition duration-300 hover:shadow-3xl">
+                    <div class="text-yellow-600 mb-4">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3">Conductores</h2>
+                    <p class="text-gray-700 mb-4">
+                        Forma parte de nuestra red de transporte en Bogotá. Acepta envíos, optimiza tus rutas y genera ingresos de forma constante.
+                    </p>
+                    <ul class="space-y-2 text-gray-600 list-disc list-inside">
+                        <li>Asignación de rutas optimizadas.</li>
+                        <li>Confirmación de entrega digital.</li>
+                        <li>Pagos rápidos y transparentes.</li>
+                    </ul>
+                    <a href="{% url 'frontend:mi_cuenta' %}" class="mt-6 inline-block text-yellow-600 font-semibold hover:text-yellow-800 transition duration-150">
+                        Quiero ser Conductor &rarr;
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    {% include 'FRONTEND/_footer.html' %} 
+
+</body>
+</html>

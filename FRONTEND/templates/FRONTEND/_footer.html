@@ -1,0 +1,80 @@
+<footer class="bg-gray-800 text-white mt-12 border-t border-gray-700">
+    <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            
+            <div>
+                <h3 class="text-2xl font-extrabold tracking-widest text-indigo-400 mb-3">
+                    BOGOCARGO
+                </h3>
+                <p class="text-sm text-gray-400">
+                    Logística confiable para mayoristas, minoristas y conductores en Bogotá. Conectando negocios.
+                </p>
+            </div>
+
+            <div>
+                <h4 class="text-lg font-semibold mb-4 border-b border-indigo-600 pb-1">Navegación</h4>
+                <ul class="space-y-2 text-sm">
+                    <li>
+                        <a href="{% url 'frontend:index' %}" class="text-gray-300 hover:text-indigo-400 transition duration-150">Inicio</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'frontend:servicios' %}" class="text-gray-300 hover:text-indigo-400 transition duration-150">Nuestros Servicios</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'frontend:mi_cuenta' %}" class="text-gray-300 hover:text-indigo-400 transition duration-150">Acceso / Registro</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'frontend:listar_pedidos' %}" class="text-gray-300 hover:text-indigo-400 transition duration-150">Rastreo de Envíos</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-lg font-semibold mb-4 border-b border-indigo-600 pb-1">Soporte</h4>
+                <ul class="space-y-2 text-sm">
+                    <li>
+                        <a href="#" class="text-gray-300 hover:text-indigo-400 transition duration-150">Términos y Condiciones</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-gray-300 hover:text-indigo-400 transition duration-150">Política de Privacidad</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-gray-300 hover:text-indigo-400 transition duration-150">Preguntas Frecuentes (FAQ)</a>
+                    </li>
+                    <li>
+                        <a href="mailto:soporte@bogocargo.com" class="text-gray-300 hover:text-indigo-400 transition duration-150">Contacto Directo</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-lg font-semibold mb-4 border-b border-indigo-600 pb-1">Ubicación</h4>
+                <address class="space-y-2 text-sm text-gray-400 not-italic">
+                    <p>📍 Bogotá, D.C., Colombia</p>
+                    <p>📧 contacto@bogocargo.com</p>
+                    <p>📞 +57 (601) 555-5555</p>
+                    <p class="mt-3 text-xs text-gray-500">Operamos 24/7 en el área metropolitana.</p>
+                </address>
+            </div>
+
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-700 text-center">
+            <p class="text-sm text-gray-500">
+                &copy; {{ current_year }} BOGOCARGO S.A.S. Todos los derechos reservados.
+            </p>
+        </div>
+
+    </div>
+</footer>
+
+<script>
+    // Pequeño script para obtener el año actual, si no lo manejas directamente con Django
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearSpan = document.querySelector('.text-gray-500');
+        if (yearSpan) {
+            yearSpan.innerHTML = yearSpan.innerHTML.replace('{{ current_year }}', new Date().getFullYear());
+        }
+    });
+</script>

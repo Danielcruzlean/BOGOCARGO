@@ -4,56 +4,198 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Pedidos{% endblock %}</title>
-    <!-- Carga de Tailwind CSS -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carga de la fuente Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
-        /* Definir fuente Inter y fondo suave */
+        /* ----------------------------- */
+        /* Estilos base existentes tuyos */
+        /* ----------------------------- */
+
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #f7f9fb; /* Fondo muy claro */
+            background-color: #f7f9fb; /* Fondo suave */
             min-height: 100vh;
+        }
+
+        /* ------------------------------------------- */
+        /* ESTILOS DE FORMULARIO */
+        /* ------------------------------------------- */
+
+        /* Contenedor elegante tipo tarjeta */
+        .form-wrapper {
+            max-width: 950px;
+            margin: 40px auto;
+            padding: 40px;
+
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Títulos profesionales */
+        .form-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+
+        .form-subtitle {
+            font-size: 15px;
+            color: #6b6b6b;
+            margin-bottom: 25px;
+        }
+
+        /* Espacios */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        /* ------------------------------------------- */
+        /* ESTILOS DE MENSAJES (Para ver los errores) */
+        /* ------------------------------------------- */
+
+        .message-alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            position: relative;
+        }
+        .alert-error {
+            background-color: #fca5a5; /* Rojo suave */
+            color: #dc2626; /* Rojo oscuro */
+            border: 1px solid #dc2626;
+        }
+        .alert-success {
+            background-color: #a7f3d0; /* Verde suave */
+            color: #059669; /* Verde oscuro */
+            border: 1px solid #059669;
+        }
+        .alert-warning {
+            background-color: #fcd34d; /* Amarillo suave */
+            color: #b45309; /* Amarillo oscuro */
+            border: 1px solid #b45309;
+        }
+        .alert-info {
+            background-color: #bfdbfe; /* Azul suave */
+            color: #2563eb; /* Azul oscuro */
+            border: 1px solid #2563eb;
+        }
+        .alert-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: inherit;
+            line-height: 1;
+            padding: 0;
+            background: none;
+            border: none;
         }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
     
-    <!-- ENCABEZADO INTEGRADO: Usa tonos índigo (color original) -->
+    {% block navbar %}
     <header class="bg-indigo-700 shadow-xl p-4 flex justify-between items-center">
         <h1 class="text-2xl font-bold text-white tracking-wider">BOGOCARGO APP</h1>
-        <nav class="flex items-center space-x-6">
-            <!-- Navegación -->
-            <a href="{% url 'frontend:index' %}" class="text-indigo-200 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-indigo-600">
-                Inicio
-            </a>
-            
-            {% if user.is_authenticated %}
-                <a href="{% url 'frontend:crear_pedido' %}" class="text-indigo-200 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-indigo-600">
-                    Crear Pedido
-                </a>
-                <a href="{% url 'frontend:listar_pedidos' %}" class="text-indigo-200 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-indigo-600">
-                    Mis Pedidos
-                </a>
+        
+        <nav>
+            <ul class="flex items-center space-x-4">
+                <li>
+                    <a href="{% url 'frontend:index' %}" class="text-indigo-200 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-indigo-600">
+                        Inicio
+                    </a>
+                </li>
                 
-                {# Información del usuario logueado #}
-                <span class="text-white text-sm font-medium border border-indigo-500 rounded-full py-1 px-3 bg-indigo-600">
-                    Hola, {{ user.username|default:"Usuario" }}
-                </span>
-            {% else %}
-                <a href="{% url 'login' %}" class="text-white bg-indigo-500 hover:bg-indigo-400 py-1 px-4 rounded-full font-semibold transition duration-150 shadow-md">
-                    Iniciar Sesión
-                </a>
-            {% endif %}
+                {% if user.is_authenticated %}
+                    
+                    {# BLOQUE DE ACCIONES DE NAVEGACIÓN: Se puede dejar vacío en las plantillas hijas para ocultar "Crear Pedido" #}
+                    {% block nav_actions %}
+                        {% if user.tipo == 'MINORISTA' %}
+                        <li>
+                            <a href="{% url 'frontend:crear_pedido' %}" class="text-indigo-200 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-indigo-600">
+                                Crear Pedido
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endblock nav_actions %}
+                    
+                    <li>
+                        {# Redirección CONDICIONAL DE MIS PEDIDOS #}
+                        {% if user.tipo == 'CONDUCTOR' %}
+                            <a href="{% url 'frontend:listar_pedidos_conductor' %}" class="text-indigo-200 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-indigo-600">
+                                Mis Pedidos
+                            </a>
+                        {% else %}
+                            <a href="{% url 'frontend:listar_pedidos' %}" class="text-indigo-200 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-indigo-600">
+                                Mis Pedidos
+                            </a>
+                        {% endif %}
+                    </li>
+                    
+                    <li>
+                        <a href="{% url 'frontend:mi_cuenta' %}" class="text-white text-sm font-medium border border-indigo-500 rounded-full py-1 px-3 bg-indigo-600 hover:bg-indigo-500 transition duration-150">
+                            Hola, {{ user.username|default:"Usuario" }}
+                        </a>
+                    </li>
+
+                    {# Info de vehículo solo si es CONDUCTOR #}
+                    {% if user.tipo == 'CONDUCTOR' and placas %}
+                    <li>
+                        <span class="text-white text-xs bg-gray-600 py-1 px-3 rounded-full flex items-center space-x-1">
+                            <i class="fas fa-truck text-green-300"></i>
+                            <span>{{ tipo_vehiculo|default:"Vehículo" }}: <strong>{{ placas }}</strong></span>
+                            </span>
+                    </li>
+                    {% endif %}
+                    
+                    <li>
+                        <a href="{% url 'frontend:logout' %}" class="text-red-300 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-red-700">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </a>
+                    </li>
+                    
+                {% else %}
+                    <li>
+                        <a href="{% url 'frontend:login' %}" class="text-white bg-indigo-500 hover:bg-indigo-400 py-1 px-4 rounded-full font-semibold transition duration-150 shadow-md">
+                            Iniciar Sesión
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
         </nav>
     </header>
+    {% endblock navbar %}
 
     <main class="flex-grow container mx-auto p-6 mt-8">
-        <!-- BLOQUE PRINCIPAL: El contenido de las páginas hijas esperará fondos blancos o muy claros -->
+        
+        {# Bloque de Mensajes de Django - ¡CRÍTICO PARA VER ERRORES! #}
+        {% if messages %}
+            <div class="max-w-4xl mx-auto mb-6">
+                {% for message in messages %}
+                    <div class="message-alert 
+                        {% if 'error' in message.tags %}alert-error{% endif %}
+                        {% if 'success' in message.tags %}alert-success{% endif %}
+                        {% if 'warning' in message.tags %}alert-warning{% endif %}
+                        {% if 'info' in message.tags %}alert-info{% endif %}
+                        " role="alert">
+                        {{ message }}
+                        <button type="button" class="alert-close" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer simple y discreto (gris oscuro) -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm">
             &copy; 2025 BOGOCARGO. Todos los derechos reservados.

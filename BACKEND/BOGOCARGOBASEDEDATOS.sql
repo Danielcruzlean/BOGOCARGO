@@ -1,27 +1,36 @@
 CREATE DATABASE bogocargobasededatos;
 USE bogocargobasededatos;
 
--- 1. Tabla usuarios (SIN CAMBIOS CRÍTICOS)
+-- ##################################################################
+-- PASO 2: CREACIÓN DE TABLAS
+-- ##################################################################
+
+-- 1. Tabla usuarios (CORREGIDA: Sincronizada con el modelo Django para incluir campos de vehículo)
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    -- Campos básicos de usuario
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    -- Django usa TIPO_CHOICES, aquí lo mantenemos simple para MySQL
-    tipo ENUM('MINORISTA','CONDUCTOR','ADMIN') NOT NULL, 
     email VARCHAR(120) UNIQUE NOT NULL,
-    telefono VARCHAR(20),
     password VARCHAR(255) NOT NULL,
-    disponibilidad ENUM('DISPONIBLE','EN_RUTA','DESCANSO') DEFAULT 'DISPONIBLE',
-    fecha_registro DATETIME DEFAULT NOW(),
-    -- CAMPOS ADICIONALES DE DJANGO: is_active, is_staff, is_superuser, groups, user_permissions
-    is_active BOOLEAN DEFAULT TRUE, 
+    telefono VARCHAR(20),
+    tipo ENUM('MINORISTA','CONDUCTOR','ADMIN') NOT NULL,
+    
+    -- Campos de Vehículo (Añadidos para CONDUCTOR, como en el modelo de Django)
+    placas VARCHAR(10) UNIQUE NULL, 
+    marca_vehiculo VARCHAR(50) NULL,
+    referencia_vehiculo VARCHAR(50) NULL,
+    tipo_vehiculo ENUM('CAMIONETA','FURGON','CAMION_PEQUEÑO','CAMION_GRANDE','MOTO') NULL,
+    
+    -- Campos de Django
+    is_active BOOLEAN DEFAULT TRUE,
     is_staff BOOLEAN DEFAULT FALSE,
     is_superuser BOOLEAN DEFAULT FALSE,
     last_login DATETIME,
     date_joined DATETIME DEFAULT NOW()
 );
 
--- 2. Tabla empresas (SIN CAMBIOS)
+-- 2. Tabla empresas (Sin cambios)
 CREATE TABLE empresas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
@@ -33,14 +42,14 @@ CREATE TABLE empresas (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
--- 3. Tabla localidades (SIN CAMBIOS)
+-- 3. Tabla localidades (Sin cambios)
 CREATE TABLE localidades (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) UNIQUE NOT NULL,
     codigo_postal VARCHAR(10)
 );
 
--- 4. Tabla productos (SIN CAMBIOS)
+-- 4. Tabla productos (Sin cambios)
 CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
@@ -54,34 +63,44 @@ CREATE TABLE productos (
     FOREIGN KEY (empresa_id) REFERENCES empresas(id)
 );
 
--- 5. Tabla pedidos (ACTUALIZADA PARA COINCIDIR CON DJANGO)
+-- 5. Tabla pedidos (CORREGIDA: Sincronizada con el modelo Django, usando los ENUM correctos)
 CREATE TABLE pedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    -- Django usa conductor_id en lugar de mayorista_id
-    minorista_id INT NOT NULL, 
-    conductor_id INT, 
-
-    fecha_creacion DATETIME DEFAULT NOW(),
+    -- Relaciones
+    minorista_id INT NOT NULL,
+    conductor_id INT,
     
-    -- ESTADOS ACTUALES DEL MODELO DE DJANGO
-    estado ENUM('PENDIENTE','ASIGNADO','EN_TRANSITO','COMPLETADO','CANCELADO') DEFAULT 'PENDIENTE',
-
-    -- CORRECCIÓN CRÍTICA: Cambiado 'peso_total' a 'peso_total_kg'
-    peso_total_kg DECIMAL(10,2) NOT NULL DEFAULT 0.0, 
-    -- NUEVO CAMPO NECESARIO
-    descripcion_carga VARCHAR(100) NOT NULL DEFAULT 'Carga no especificada',
-
-    -- SIMPLIFICACIÓN: Django usa ORÍGEN y DESTINO (como CharField)
-    origen VARCHAR(255) NOT NULL, 
+    -- Datos del Envío y Carga
+    origen VARCHAR(255) NOT NULL,
     destino VARCHAR(255) NOT NULL,
+    fecha_recoleccion DATE NOT NULL,
+    hora_recoleccion TIME NULL,
+    observaciones TEXT,
     
-    -- Se eliminaron campos de geolocalización lat/lng que no están en el modelo final de Django
+    -- Datos de la Carga (Múltiples unidades por un solo registro)
+    tipo_mercancia VARCHAR(50) NOT NULL,
+    peso_total DECIMAL(10,2) NOT NULL DEFAULT 0.0,
+    volumen DECIMAL(10,2) NOT NULL DEFAULT 0.0,
+    valor_declarado DECIMAL(10,0) NOT NULL DEFAULT 0,
+    unidades INT UNSIGNED NOT NULL DEFAULT 1,
+    largo DECIMAL(5,2) NOT NULL DEFAULT 0.1,
+    alto DECIMAL(5,2) NOT NULL DEFAULT 0.1,
+    ancho DECIMAL(5,2) NOT NULL DEFAULT 0.1,
     
+    -- Datos de Asignación/Facturación
+    empresa_mayorista VARCHAR(200) NULL,
+    precio_estimado DECIMAL(10,0) NOT NULL DEFAULT 0,
+    
+    -- Estado y Trazabilidad (ENUMs de Django)
+    estado ENUM('PENDIENTE','ASIGNADO','EN_RUTA','ENTREGADO','CANCELADO') DEFAULT 'PENDIENTE',
+    fecha_creacion DATETIME DEFAULT NOW(),
+    fecha_actualizacion DATETIME DEFAULT NOW(),
+
     FOREIGN KEY (minorista_id) REFERENCES usuarios(id),
     FOREIGN KEY (conductor_id) REFERENCES usuarios(id)
 );
 
--- 6. Tabla detalle_pedido (SIN CAMBIOS)
+-- 6. Tabla detalle_pedido (Sin cambios)
 CREATE TABLE detalle_pedido (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pedido_id INT NOT NULL,
@@ -91,64 +110,54 @@ CREATE TABLE detalle_pedido (
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
 
--- 7. Tabla vehiculos (SIN CAMBIOS CRÍTICOS)
-CREATE TABLE vehiculos (
+-- 7. Tabla factura (AÑADIDA y Sincronizada)
+CREATE TABLE factura (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    placa VARCHAR(10) UNIQUE NOT NULL,
-    tipo ENUM('MOTO','CAMIONETA','CAMION') NOT NULL,
-    capacidad_kg INT NOT NULL,
-    conductor_id INT,
-    FOREIGN KEY (conductor_id) REFERENCES usuarios(id)
-);
-
--- 8. Tabla conductores_zonas (SIN CAMBIOS)
-CREATE TABLE conductores_zonas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    conductor_id INT NOT NULL,
-    localidad_id INT NOT NULL, 
-    FOREIGN KEY (conductor_id) REFERENCES usuarios(id),
-    FOREIGN KEY (localidad_id) REFERENCES localidades(id)
-);
-
--- 9. Tabla envios (SIN CAMBIOS CRÍTICOS)
-CREATE TABLE envios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    pedido_id INT NOT NULL UNIQUE, -- Se asume OneToOneField en Django
-    vehiculo_id INT, -- NULLABLE: Puede ser models.SET_NULL
-    conductor_id INT, -- NULLABLE: Puede ser models.SET_NULL
-    fecha_salida DATETIME,
-    fecha_entrega DATETIME,
-    estado ENUM('ASIGNADO','EN_RUTA','ENTREGADO','FALLIDO') DEFAULT 'ASIGNADO',
-    FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
-    FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id),
-    FOREIGN KEY (conductor_id) REFERENCES usuarios(id)
-);
-
--- 10. Tabla rastreo_envio (ACTUALIZADA PARA COINCIDIR CON DJANGO)
-CREATE TABLE rastreo_envio (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    envio_id INT NOT NULL,
-    -- CORRECCIÓN CRÍTICA: lat/lng eliminados, reemplazados por ubicacion
-    ubicacion VARCHAR(255) NOT NULL DEFAULT 'Ubicación no registrada',
-    -- CORRECCIÓN CRÍTICA: Renombrado 'fecha' a 'fecha_hora'
-    fecha_hora DATETIME DEFAULT NOW(), 
-    -- NUEVO CAMPO NECESARIO
-    estado VARCHAR(30) NOT NULL DEFAULT 'RECOLECCIÓN',
-    observaciones TEXT,
+    orden_id INT UNIQUE NOT NULL, -- Relación OneToOne con Pedidos
+    monto_total DECIMAL(10,0) NOT NULL,
+    fecha_emision DATE NOT NULL DEFAULT (CURRENT_DATE()),
+    fecha_vencimiento DATE NOT NULL,
+    fecha_pago DATE,
+    estado ENUM('PENDIENTE_PAGO','PAGADA','VENCIDA','ANULADA') NOT NULL DEFAULT 'PENDIENTE_PAGO',
+    referencia VARCHAR(100) UNIQUE,
     
-    FOREIGN KEY (envio_id) REFERENCES envios(id)
+    FOREIGN KEY (orden_id) REFERENCES pedidos(id)
 );
 
--- 11. Tabla asignaciones (ACTUALIZADA PARA COINCIDIR CON DJANGO)
+-- 8. Tabla asignaciones (Sin cambios - Mantiene la lógica de oferta/aceptación)
 CREATE TABLE asignaciones (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pedido_id INT NOT NULL,
     conductor_id INT NOT NULL,
     fecha_asignacion DATETIME DEFAULT NOW(),
-    -- CAMPO CRÍTICO: Eliminación de 'vehiculo_id' y 'criterio', se añadió 'estado'
-    estado ENUM('PENDIENTE','ACEPTADA','RECHAZADA') DEFAULT 'PENDIENTE', 
+    estado ENUM('PENDIENTE','ACEPTADA','RECHAZADA') DEFAULT 'PENDIENTE',
     
     FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
     FOREIGN KEY (conductor_id) REFERENCES usuarios(id)
-    -- FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id)
+);
+
+-- 9. Tabla envios (Sin cambios - Mantiene la trazabilidad y la relación con el conductor, pero ya NO necesita vehiculo_id)
+-- NOTA: Como eliminamos la tabla vehiculos, esta tabla ahora asume que el vehículo está implícito en el conductor asignado al pedido.
+CREATE TABLE envios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL UNIQUE,
+    conductor_id INT, -- Conductor que ejecuta
+    fecha_salida DATETIME,
+    fecha_entrega DATETIME,
+    estado ENUM('ASIGNADO','EN_RUTA','ENTREGADO','FALLIDO') DEFAULT 'ASIGNADO',
+    
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+    FOREIGN KEY (conductor_id) REFERENCES usuarios(id)
+);
+
+-- 10. Tabla rastreo_envio (Sin cambios)
+CREATE TABLE rastreo_envio (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    envio_id INT NOT NULL,
+    ubicacion VARCHAR(255) NOT NULL DEFAULT 'Ubicación no registrada',
+    fecha_hora DATETIME DEFAULT NOW(),
+    estado VARCHAR(30) NOT NULL DEFAULT 'RECOLECCIÓN',
+    observaciones TEXT,
+    
+    FOREIGN KEY (envio_id) REFERENCES envios(id)
 );

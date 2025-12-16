@@ -1,170 +1,280 @@
+{% load static widget_tweaks %}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Nueva Orden de Envío</title>
+    <title>{% block title %}Registrar Nueva Orden | BOGOCARGO{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            min-height: 100vh;
+        .tracking-widest { letter-spacing: 0.1em; }
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            transition: all 0.2s ease-in-out;
+            font-size: 15px;
+            color: #1f2937;
         }
-        /* Estilos personalizados para el foco en inputs */
-        input:focus, select:focus, textarea:focus {
-            border-color: #4f46e5; /* indigo-600 */
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.5);
+        .input-field:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
+        textarea.input-field { min-height: 100px; resize: vertical; }
+        select.input-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+        }
+        .input-field[readonly] { cursor: not-allowed; background-color: #f3f4f6 !important; }
     </style>
 </head>
-<body>
-    <header class="bg-gray-900 text-white shadow-md p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <span class="text-xl font-bold">BogoCargo</span> <nav class="space-x-4 text-sm hidden sm:block">
-                <a href="#" class="hover:text-gray-400">Inicio</a>
-                <a href="/listar-pedidos/" class="hover:text-gray-400">Mis Pedidos</a>
-                <a href="#" class="hover:text-gray-400">Perfil</a>
-            </nav>
+
+<body class="bg-gray-100 min-h-screen">
+
+    <header class="bg-gray-800 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="{% url 'frontend:dashboard_minorista' %}" class="text-3xl font-extrabold tracking-widest text-white">
+                        BOGOCARGO
+                    </a>
+                </div>
+                <nav class="flex space-x-8">
+                    <a href="{% url 'frontend:dashboard_minorista' %}" class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition">Dashboard</a>
+                    <a href="{% url 'frontend:crear_pedido' %}" class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-bold border-b-2 border-green-500">Crear Pedido</a>
+                    <a href="{% url 'frontend:listar_pedidos' %}" class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium">Mis Pedidos</a>
+                </nav>
+                <div class="flex items-center">
+                    <a href="{% url 'frontend:mi_cuenta' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-lg">Mi Cuenta</a>
+                </div>
+            </div>
         </div>
     </header>
-    
-    <main class="container mx-auto p-4 sm:p-8 lg:p-12">
-        <div class="bg-white shadow-2xl rounded-2xl p-6 sm:p-10 max-w-4xl mx-auto">
 
-            <div class="border-b-2 border-indigo-100 pb-4 mb-8">
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800">
-                    Registrar una Nueva Orden
-                </h1>
-                <p class="mt-2 text-gray-500">
-                    Tu rol actual es: <strong class="text-indigo-600">MINORISTA (Simulado)</strong>. Completa los detalles de tu envío.
-                </p>
+    {% block content %}
+    <div class="max-w-xl mx-auto my-10 bg-white shadow-2xl rounded-2xl p-8 sm:p-12 border border-gray-200">
+        <h2 class="text-3xl font-extrabold text-gray-800 text-center mb-2">🚚 Registrar una Nueva Orden</h2>
+        <p class="text-center text-gray-500 text-sm mb-6">Rol: <span class="font-bold text-indigo-600">{{ request.user.tipo }}</span></p>
+
+        <hr class="my-6 border-gray-200">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 mb-4 text-sm {% if message.tags == 'error' %}text-red-700 bg-red-100{% else %}text-green-700 bg-green-100{% endif %} rounded-lg">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" id="pedido-form" action="{% url 'frontend:crear_pedido' %}">
+            {% csrf_token %}
+
+            <h3 class="text-xl font-bold text-gray-700 mb-4 pb-2 border-b-2 border-indigo-100">Información de Recolección</h3>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Empresa Mayorista (Distribuidor)</label>
+                {% render_field form.mayorista_origen_id class='input-field' id='id_mayorista_origen_id' %}
             </div>
-            
-            <form method="POST" action="/crear_pedido/" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    <div>
-                        <label for="empresa_mayorista" class="block text-sm font-medium text-gray-700 mb-1">Empresa Mayorista (Distribuidor)</label>
-                        <select id="empresa_mayorista" name="empresa_mayorista" required
-                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150 appearance-none bg-white">
-                            <option value="">Seleccione la empresa distribuidora...</option>
-                            <option value="Mayorista_A">Distribuidora Alfa</option>
-                            <option value="Mayorista_B">Logística Beta</option>
-                            <option value="Mayorista_C">Transportes Gamma</option>
-                        </select>
-                    </div>
 
-                    <div>
-                        <label for="fecha_recoleccion" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Recolección Deseada</label>
-                        <input type="date" id="fecha_recoleccion" name="fecha_recoleccion" required
-                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150">
-                    </div>
-
-                    <div>
-                        <label for="origen" class="block text-sm font-medium text-gray-700 mb-1">Dirección de Origen</label>
-                        <input type="text" id="origen" name="origen" required
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
-                            placeholder="Ej: Calle 26 # 68B-50, Bogotá">
-                    </div>
-
-                    <div>
-                        <label for="destino" class="block text-sm font-medium text-gray-700 mb-1">Dirección de Destino</label>
-                        <input type="text" id="destino" name="destino" required
-                            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
-                            placeholder="Ej: Carrera 43A # 1-50, Medellín">
-                    </div>
-
-                    <div>
-                        <label for="tipo_mercancia" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Mercancía</label>
-                        <select id="tipo_mercancia" name="tipo_mercancia" required
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150 appearance-none bg-white">
-                            <option value="">Seleccione...</option>
-                            <option value="Documentos">Documentos</option>
-                            <option value="CargaSeca">Carga Seca (Cajas, Paquetes)</option>
-                            <option value="Refrigerado">Refrigerado</option>
-                            <option value="Peligroso">Material Peligroso</option>
-                        </select>
-                    </div>
-
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Fecha de Recolección</label>
+                    <input type="date" id="id_fecha_recoleccion" name="fecha_recoleccion" class="input-field" 
+                           min="{{ fecha_recoleccion_min|date:'Y-m-d' }}" value="{{ form.fecha_recoleccion.value|default:'' }}" required>
                 </div>
-
-                <div class="pt-6 border-t border-gray-200">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Detalles de la Carga</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                        <div>
-                            <label for="peso" class="block text-sm font-medium text-gray-700 mb-1">Peso Total (Kg)</label>
-                            <input type="number" id="peso" name="peso" step="0.01" required min="0.1"
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
-                                placeholder="Ej: 15.5">
-                        </div>
-
-                        <div>
-                            <label for="volumen" class="block text-sm font-medium text-gray-700 mb-1">Volumen (m³)</label>
-                            <input type="number" id="volumen" name="volumen" step="0.01" min="0"
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
-                                placeholder="Ej: 0.5">
-                        </div>
-                        
-                        <div>
-                            <label for="num_paquetes" class="block text-sm font-medium text-gray-700 mb-1">Número de Paquetes/Unidades</label>
-                            <input type="number" id="num_paquetes" name="num_paquetes" required min="1"
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
-                                placeholder="Ej: 3">
-                        </div>
-                    </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Horario (8 AM - 5 PM)</label>
+                    <select id="id_hora_recoleccion" name="hora_recoleccion" class="input-field" required>
+                        <option value="" disabled selected>--- Seleccione hora ---</option>
+                        <option value="08:00:00">8:00 AM</option>
+                        <option value="09:00:00">9:00 AM</option>
+                        <option value="10:00:00">10:00 AM</option>
+                        <option value="11:00:00">11:00 AM</option>
+                        <option value="12:00:00">12:00 PM</option>
+                        <option value="13:00:00">1:00 PM</option>
+                        <option value="14:00:00">2:00 PM</option>
+                        <option value="15:00:00">3:00 PM</option>
+                        <option value="16:00:00">4:00 PM</option>
+                        <option value="17:00:00">5:00 PM</option>
+                    </select>
                 </div>
+            </div>
 
-                <div class="pt-6 border-t border-gray-200">
-                    <label for="observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones / Descripción detallada</label>
-                    <textarea id="observaciones" name="observaciones" rows="4"
-                                class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
-                                placeholder="Ej: Contenido frágil. Contactar 1 hora antes de la entrega."></textarea>
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Dirección de Origen</label>
+                {% render_field form.origen class='input-field bg-gray-100' readonly='readonly' id='id_origen' %}
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Dirección de Destino</label>
+                {% render_field form.destino class='input-field' id='id_destino' placeholder='Ej: Calle 123 #45-67, Bogotá' %}
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-700 mt-8 mb-4 pt-4 border-t-2 border-indigo-100">Detalles de la Carga</h3>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Tipo de Mercancía</label>
+                {% render_field form.tipo_mercancia class='input-field' id='id_tipo_mercancia' %}
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Valor De los Productos (COP)</label>
+                {% render_field form.valor_declarado class='input-field' id='id_valor_declarado' min='500000' step='1000' %}
+                <p class="text-[10px] text-gray-400 mt-1">* Mínimo informativo: $500,000 COP</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Peso Unitario (Kg)</label>
+                    <input type="number" step="0.01" id="id_peso_por_unit" name="peso_por_unidad" class="input-field" required min="0.1">
                 </div>
-
-                <div class="flex justify-end pt-6">
-                    <button type="submit"
-                            class="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-105">
-                        <svg class="w-5 h-5 inline-block mr-2 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Confirmar y Enviar Pedido
-                    </button>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Unidades</label>
+                    {% render_field form.unidades class='input-field' min="1" id='id_unidades' %}
                 </div>
-            </form>
+            </div>
 
-        </div>
-    </main>
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label class="text-xs font-bold">Largo (m)</label>
+                    {% render_field form.largo class='input-field' id='id_largo' min="0.01" step="0.01" %}
+                </div>
+                <div>
+                    <label class="text-xs font-bold">Alto (m)</label>
+                    {% render_field form.alto class='input-field' id='id_alto' min="0.01" step="0.01" %}
+                </div>
+                <div>
+                    <label class="text-xs font-bold">Ancho (m)</label>
+                    {% render_field form.ancho class='input-field' id='id_ancho' min="0.01" step="0.01" %}
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-indigo-600">Total Kg</label>
+                    <input type="text" id="peso_total_display" value="0.00" class="input-field font-bold bg-indigo-50" readonly>
+                    <input type="hidden" id="id_peso_total" name="peso_total" value="0.00">
+                    <input type="hidden" id="id_volumen" name="volumen" value="0.00">
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
+                {% render_field form.observaciones class='input-field' %}
+            </div>
+
+            <div class="p-5 rounded-xl border border-green-300 bg-green-50 shadow-lg mb-8">
+                <div class="flex flex-col items-center">
+                    <h4 class="font-extrabold text-green-900 text-xl">💰 Precio Estimado</h4>
+                    <p id="precio-estimado-display" class="text-4xl font-black text-green-700">---</p>
+                    <input type="hidden" id="id_precio_estimado" name="precio_estimado" value="">
+                    <p class="text-[10px] text-green-600 mt-2 uppercase tracking-tighter font-bold"></p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="w-full px-8 py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition transform hover:scale-[1.02]">
+                    🚚 Confirmar y Registrar Orden
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script id="address-map-data" type="application/json">{{ address_map_json|safe }}</script>
 
     <script>
-        // JavaScript para limitar el campo de fecha a la fecha actual o futura
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const dateInput = document.getElementById('fecha_recoleccion');
+        document.addEventListener('DOMContentLoaded', function() {
+            const addressData = document.getElementById('address-map-data');
+            const addressMap = addressData ? JSON.parse(addressData.textContent) : {};
+            const form = document.getElementById('pedido-form');
             
-            // 1. Obtener la fecha de hoy
-            const today = new Date();
+            const mayoristaSelect = document.getElementById('id_mayorista_origen_id');
+            const origenInput = document.getElementById('id_origen');
+            const pesoUnit = document.getElementById('id_peso_por_unit');
+            const unidades = document.getElementById('id_unidades');
             
-            // 2. Formatear la fecha como YYYY-MM-DD
-            // Importante: getMonth() es 0-indexado, por eso se suma 1.
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
+            const pesoTotalHidden = document.getElementById('id_peso_total');
+            const volHidden = document.getElementById('id_volumen');
+            const pesoDisplay = document.getElementById('peso_total_display');
             
-            const todayString = `${year}-${month}-${day}`;
+            const precioDisplay = document.getElementById('precio-estimado-display');
+            const precioHidden = document.getElementById('id_precio_estimado');
+            const valorDeclarado = document.getElementById('id_valor_declarado');
 
-            // 3. Establecer el atributo 'min' del input de fecha
-            dateInput.setAttribute('min', todayString);
-            
-            // Opcional: Establecer el valor por defecto a mañana para mejor UX
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
-            const tomorrowYear = tomorrow.getFullYear();
-            const tomorrowMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
-            const tomorrowDay = String(tomorrow.getDate()).padStart(2, '0');
-            const tomorrowString = `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`;
-            
-            dateInput.value = tomorrowString;
+            function calculate() {
+                // Validación de valores negativos
+                const numericInputs = [pesoUnit, unidades, valorDeclarado, document.getElementById('id_largo'), document.getElementById('id_alto'), document.getElementById('id_ancho')];
+                numericInputs.forEach(input => {
+                    if (parseFloat(input.value) < 0) input.value = Math.abs(input.value);
+                });
+
+                const w = parseFloat(pesoUnit.value) || 0;
+                const u = parseInt(unidades.value) || 0;
+                const totalPesoReal = w * u;
+                
+                const v = parseFloat(valorDeclarado.value) || 0;
+                const largo = parseFloat(document.getElementById('id_largo').value) || 0;
+                const alto = parseFloat(document.getElementById('id_alto').value) || 0;
+                const ancho = parseFloat(document.getElementById('id_ancho').value) || 0;
+
+                const volumenTotal = largo * alto * ancho * u;
+                const pesoVolumetrico = volumenTotal * 400;
+                const pesoLiquidacion = Math.max(totalPesoReal, pesoVolumetrico);
+
+                pesoDisplay.value = totalPesoReal.toFixed(2);
+                if(pesoTotalHidden) pesoTotalHidden.value = totalPesoReal.toFixed(2);
+                if(volHidden) volHidden.value = volumenTotal.toFixed(3);
+
+                // LÓGICA CON 30% DE DESCUENTO
+                // Anterior: Cargo Base $25,000 -> Nuevo: $17,500
+                // Anterior: Kg $1,200 -> Nuevo: $840
+                if (pesoLiquidacion > 0 && v >= 500000 && largo > 0 && alto > 0 && ancho > 0) {
+                    const cargoBase = 17500;
+                    const cargoPeso = pesoLiquidacion * 840;
+                    
+                    const subtotal = cargoBase + cargoPeso;
+                    
+                    // Redondeo al alza a los 100 pesos más cercanos para precisión con el descuento
+                    const final = Math.ceil(subtotal / 100) * 100;
+                    
+                    precioDisplay.textContent = final.toLocaleString('es-CO', {style:'currency', currency:'COP', minimumFractionDigits:0});
+                    precioHidden.value = final;
+                } else {
+                    precioDisplay.textContent = '---';
+                    precioHidden.value = '';
+                }
+            }
+
+            if(mayoristaSelect) {
+                mayoristaSelect.addEventListener('change', function() {
+                    origenInput.value = addressMap[this.value] || '';
+                });
+            }
+
+            [pesoUnit, unidades, valorDeclarado, 
+            document.getElementById('id_largo'), 
+            document.getElementById('id_alto'), 
+            document.getElementById('id_ancho')].forEach(el => {
+                if(el) el.addEventListener('input', calculate);
+            });
+
+            form.addEventListener('submit', function(e) {
+                const valDec = parseFloat(valorDeclarado.value) || 0;
+                if (valDec < 500000) {
+                    e.preventDefault();
+                    alert('El valor declarado mínimo debe ser $500.000 COP.');
+                    return;
+                }
+                if (!precioHidden.value || precioHidden.value == "0") {
+                    e.preventDefault();
+                    alert('Por favor completa los datos de la carga para calcular el precio económico.');
+                }
+            });
         });
     </script>
+    {% endblock %}
 </body>
 </html>

@@ -1,0 +1,263 @@
+{% load static humanize %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Pedido #{{ pedido.id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .factura-card {
+            border-left: 5px solid #10B981;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include 'FRONTEND/_header.html' %}
+
+    <main class="container mx-auto p-6 sm:p-10">
+        
+        {# Mensajes de sistema #}
+        {% if messages %}
+            <div class="max-w-6xl mx-auto mb-6">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg font-semibold 
+                        {% if 'error' in message.tags %}bg-red-100 text-red-700{% elif 'success' in message.tags %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}"
+                        role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 bg-white shadow-2xl rounded-2xl p-6 sm:p-10">
+                
+                <div class="flex justify-between items-start mb-6 border-b pb-4">
+                    <h1 class="text-3xl font-extrabold text-gray-800">
+                        📦 Pedido BOCG-{{ pedido.id|stringformat:"05d" }}
+                    </h1>
+                    
+                    <span class="px-4 py-2 text-sm rounded-full font-bold uppercase
+                        {% if pedido.estado == 'PENDIENTE' %} bg-yellow-100 text-yellow-700
+                        {% elif pedido.estado == 'ASIGNADO' %} bg-blue-100 text-blue-700
+                        {% elif pedido.estado == 'EN_RUTA' %} bg-indigo-100 text-indigo-700
+                        {% elif pedido.estado == 'ENTREGADO' %} bg-green-100 text-green-700
+                        {% else %} bg-red-100 text-red-700 
+                        {% endif %}">
+                        {{ pedido.get_estado_display }}
+                    </span>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-gray-700 text-base mb-8">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Vehículo Asignado</p>
+                        {% if pedido.placas_asignadas %}
+                            <div class="flex items-center mt-2 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                                <div class="bg-indigo-600 p-2 rounded-lg mr-3">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-indigo-900 font-bold text-lg leading-none uppercase">{{ pedido.placas_asignadas }}</p>
+                                    <p class="text-sm text-indigo-700 mt-1">{{ pedido.marca_asignada }} {{ pedido.referencia_asignada }}</p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-red-500 font-bold mt-2 flex items-center">
+                                <span class="mr-2">⚠️</span> Esperando asignación de vehículo
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Cronograma</p>
+                        <p class="mt-2 text-gray-800"><strong>Creado:</strong> {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                        <p class="text-gray-800"><strong>Recolección:</strong> {{ pedido.fecha_recoleccion|default:"Por definir" }}</p>
+                    </div>
+                </div>
+                
+                <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Detalles de la Carga</h2>
+
+                <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-gray-700 text-base mb-8">
+                    <p><strong>Origen:</strong> {{ pedido.origen }}</p>
+                    <p><strong>Destino:</strong> {{ pedido.destino }}</p>
+                    <p><strong>Tipo de Mercancía:</strong> {{ pedido.get_tipo_mercancia_display }}</p>
+                    <p><strong>Valor Declarado:</strong> ${{ pedido.valor_declarado|intcomma }}</p>
+                    <p class="md:col-span-2"><strong>Observaciones:</strong> {{ pedido.observaciones|default:"Ninguna" }}</p>
+                </div>
+
+                <h2 class="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Dimensiones y Cantidad</h2>
+                <div class="overflow-x-auto mb-8">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                        <thead class="bg-gray-50">
+                            <tr class="text-xs uppercase text-gray-500 tracking-wider">
+                                <th class="py-3 px-4 border-b">Unidades</th>
+                                <th class="py-3 px-4 border-b">Largo (m)</th>
+                                <th class="py-3 px-4 border-b">Alto (m)</th>
+                                <th class="py-3 px-4 border-b">Ancho (m)</th>
+                                <th class="py-3 px-4 border-b">Peso Total (kg)</th>
+                                <th class="py-3 px-4 border-b">Volumen (m³)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="text-center hover:bg-gray-50 text-gray-700">
+                                <td class="py-4 px-4 border-b">{{ pedido.unidades }}</td>
+                                <td class="py-4 px-4 border-b">{{ pedido.largo }}</td>
+                                <td class="py-4 px-4 border-b">{{ pedido.alto }}</td>
+                                <td class="py-4 px-4 border-b">{{ pedido.ancho }}</td>
+                                <td class="py-4 px-4 border-b font-bold text-indigo-600">{{ pedido.peso_total }} kg</td>
+                                <td class="py-4 px-4 border-b">{{ pedido.volumen }} m³</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-3">Ruta estimada</h2>
+                    {% if google_maps_api_key and pedido.origen and pedido.destino %}
+                        <div id="map" style="height: 350px; width: 100%;" class="rounded-xl shadow-md border border-gray-200"></div>
+                        <p class="text-xs text-gray-400 mt-2 uppercase italic text-right">
+                            * Ruta de referencia calculada por Google Maps.
+                        </p>
+                    {% else %}
+                        <div id="map-placeholder" style="height: 350px; width: 100%;" class="rounded-xl shadow-md flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300">
+                            <div class="text-center p-6 text-gray-400">
+                                <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A2 2 0 013 15.382V6a2 2 0 011.106-1.789l6-3a2 2 0 011.788 0l6 3A2 2 0 0121 6v9.382a2 2 0 01-1.106 1.789L15 20l-3-1.5-3 1.5z"></path></svg>
+                                <p class="text-sm">No hay suficientes datos para mostrar el mapa.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-center mt-10 border-t pt-8 space-y-4 sm:space-y-0">
+                    <a href="{% url 'frontend:listar_pedidos' %}" class="font-bold text-gray-600 hover:text-gray-900 transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Volver al listado
+                    </a>
+
+                    {% if user.tipo == "CONDUCTOR" %}
+                        <form method="POST" action="{% url 'frontend:manejar_pedido_action' pedido_id=pedido.id %}" class="flex space-x-3">
+                            {% csrf_token %}
+                            {% if pedido.estado == "PENDIENTE" %}
+                                <button type="submit" name="action" value="aceptar" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg transition font-bold">Aceptar pedido</button>
+                            {% elif pedido.estado == "ASIGNADO" and pedido.conductor == request.user %}
+                                <button type="submit" name="action" value="en_ruta" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg transition font-bold">Iniciar ruta</button>
+                                <button type="submit" name="action" value="rechazar" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-lg transition font-bold" onclick="return confirm('¿Desea desasignarse de este pedido?')">Rechazar</button>
+                            {% elif pedido.estado == "EN_RUTA" and pedido.conductor == request.user %}
+                                <button type="submit" name="action" value="finalizar" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-lg transition font-bold">Finalizar entrega</button>
+                            {% endif %}
+                        </form>
+                    {% elif user.tipo == "MINORISTA" and pedido.estado == "PENDIENTE" %}
+                        <form method="POST" action="{% url 'frontend:manejar_pedido_action' pedido_id=pedido.id %}" onsubmit="return confirmCancel()">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="cancelar" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-lg transition font-bold">Cancelar Pedido</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="lg:col-span-1">
+                <div class="bg-white shadow-2xl rounded-2xl p-6 sm:p-8 factura-card sticky top-6">
+                    <h2 class="text-2xl font-bold text-green-600 mb-6 border-b pb-2 flex items-center">
+                        <span class="mr-2">💳</span> Facturación
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 font-medium">Precio Estimado</span>
+                            <span class="text-xl font-bold text-green-700">${{ pedido.precio_estimado|intcomma }}</span>
+                        </div>
+                        
+                        <hr class="border-gray-100">
+
+                        {% if pedido.factura %}
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-xs text-gray-400 uppercase font-bold">Factura Nº</p>
+                                    <p class="text-lg font-bold text-gray-800">#{{ pedido.factura.id|stringformat:"04d" }}</p>
+                                </div>
+                                
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                                    <p class="text-xs text-green-600 uppercase font-bold">Monto Total</p>
+                                    <p class="text-3xl font-black text-green-700">${{ pedido.factura.monto_total|intcomma }}</p>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500 text-sm">Estado</span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold uppercase
+                                        {% if pedido.factura.estado == 'PAGADA' %} bg-green-100 text-green-700
+                                        {% elif pedido.factura.estado == 'PENDIENTE_PAGO' %} bg-yellow-100 text-yellow-700
+                                        {% else %} bg-red-100 text-red-700 {% endif %}">
+                                        {{ pedido.factura.get_estado_display }}
+                                    </span>
+                                </div>
+                                
+                                <div class="text-sm text-gray-600">
+                                    <p><strong>Emisión:</strong> {{ pedido.factura.fecha_emision }}</p>
+                                    <p><strong>Vence:</strong> <span class="text-red-500 font-bold">{{ pedido.factura.fecha_vencimiento }}</span></p>
+                                </div>
+
+                                {% if pedido.factura.estado == 'PENDIENTE_PAGO' %}
+                                    <a href="{% url 'frontend:procesar_pago_view' factura_id=pedido.factura.id %}" class="mt-4 w-full block text-center py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg transition transform hover:scale-105">
+                                        Proceder al Pago
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                <p class="text-gray-400 italic text-sm px-4">La factura detallada se generará cuando el pedido sea procesado.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    {% if google_maps_api_key and pedido.origen and pedido.destino %}
+        <script>
+            function loadMapScript() {
+                var script = document.createElement('script');
+                script.src = "https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap";
+                script.async = true;
+                document.head.appendChild(script);
+            }
+            window.onload = loadMapScript;
+
+            function initMap() {
+                const originAddress = "{{ pedido.origen|escapejs }}";
+                const destinationAddress = "{{ pedido.destino|escapejs }}";
+                const directionsService = new google.maps.DirectionsService();
+                const directionsRenderer = new google.maps.DirectionsRenderer({
+                    polylineOptions: { strokeColor: "#4f46e5", strokeWeight: 5 }
+                });
+                const map = new google.maps.Map(document.getElementById("map"), {
+                    zoom: 12,
+                    center: { lat: 4.7110, lng: -74.0721 },
+                    styles: [{ "featureType": "all", "elementType": "labels.text.fill", "stylers": [{ "color": "#7c93a3" }] }]
+                });
+                directionsRenderer.setMap(map);
+                directionsService.route({
+                    origin: originAddress,
+                    destination: destinationAddress,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                }, (response, status) => {
+                    if (status === "OK") { directionsRenderer.setDirections(response); }
+                });
+            }
+        </script>
+    {% endif %}
+
+    <script>
+        function confirmCancel() {
+            return confirm("¿Está seguro de que desea cancelar este pedido? Esta acción no se puede deshacer.");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+{% load static humanize %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos Asignados | BOGOCARGO</title> 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#2563eb', // Indigo 600
+                        'secondary-gray': '#f3f4f6', // Gray 100
+                        'bg-light': '#f9fafb', // Lightest gray for cards
+                    },
+                },
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .card-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
+        .whitespace-normal {
+            white-space: normal;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-gray-800 shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    {# El logo debe apuntar al dashboard correcto según el tipo de usuario #}
+                    <a href="{% if user.tipo == 'MINORISTA' %}{% url 'frontend:dashboard_minorista' %}{% elif user.tipo == 'CONDUCTOR' %}{% url 'frontend:dashboard_conductor' %}{% else %}{% url 'frontend:dashboard' %}{% endif %}" 
+                        class="text-3xl font-extrabold tracking-widest text-white">
+                        BOGOCARGO
+                    </a>
+                </div>
+                    
+                {# Dashboard link #}
+                <a href="{% if user.tipo == 'MINORISTA' %}{% url 'frontend:dashboard_minorista' %}{% elif user.tipo == 'CONDUCTOR' %}{% url 'frontend:dashboard_conductor' %}{% else %}{% url 'frontend:dashboard' %}{% endif %}" 
+                    class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                    Dashboard
+                </a>
+                    
+                {# Mis Pedidos - ACTIVO #}
+                <a href="{% url 'frontend:listar_pedidos_conductor' %}" 
+                    class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-bold transition duration-150 border-b-2 border-indigo-500">
+                    Mis Pedidos
+                </a>
+            
+                {# Mi Cuenta (Verde) #}
+                <a href="{% url 'frontend:mi_cuenta' %}" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-200 shadow-lg">
+                    Mi Cuenta
+                </a>
+                {# Salir (Gris/Rojo) #}
+                <a href="{% url 'frontend:logout' %}" 
+                    class="text-gray-400 hover:text-red-400 text-sm transition duration-200">
+                    Salir
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-6xl mx-auto mt-8 mb-8 p-4 sm:p-0">
+        <div class="bg-white card-shadow rounded-3xl p-6 sm:p-10 lg:p-12 border border-gray-100">
+
+            <div class="mb-8 space-y-3">
+                <div class="p-4 rounded-xl font-semibold bg-green-50 text-green-700 border border-green-200"
+                    role="alert">
+                    ¡Bienvenido! Has iniciado sesión como <span class="font-bold">{{ user.tipo|title|default:'usuario' }}</span>.
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
+                <h1 class="text-3xl font-extrabold text-gray-800 mb-4 sm:mb-0">
+                    {# Título ajustado para el rol #}
+                    {% if user.tipo == 'MINORISTA' %}
+                        Mis Órdenes de Envío
+                    {% elif user.tipo == 'CONDUCTOR' %}
+                        Mis Pedidos Asignados
+                    {% else %}
+                        Listado de Pedidos (Admin)
+                    {% endif %}
+                </h1>
+            </div>
+
+            {% if messages %}
+                <div class="mb-4 space-y-3">
+                    {% for message in messages %}
+                        <div class="px-4 py-3 rounded relative border-l-4 
+                            {% if message.tags == 'success' %} bg-green-100 border-green-500 text-green-700
+                            {% elif message.tags == 'error' %} bg-red-100 border-red-500 text-red-700
+                            {% else %} bg-blue-100 border-blue-500 text-blue-700 
+                            {% endif %}" role="alert">
+                            <p class="font-bold">{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if pedidos %}
+            <div class="overflow-x-auto shadow-lg rounded-lg mt-6">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Origen / Destino</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mercancía</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Est.</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-4 py-3 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-200 bg-white">
+                        {% for p in pedidos %}
+                        <tr class="hover:bg-gray-50 transition">
+
+                            <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
+                                BOCG-{{ p.id|stringformat:"05d" }}
+                            </td>
+
+                            <td class="px-4 py-4 whitespace-normal text-sm text-gray-800 max-w-xs">
+                                <span class="font-semibold">{{ p.origen }}</span> → <span class="text-gray-600">{{ p.destino }}</span>
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                                {{ p.get_tipo_mercancia_display }}
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap text-sm font-extrabold text-green-700">
+                                ${{ p.precio_estimado|intcomma }}
+                            </td>
+
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if p.estado == 'PENDIENTE' %} bg-yellow-100 text-yellow-800
+                                    {% elif p.estado == 'ASIGNADO' %} bg-blue-100 text-blue-800
+                                    {% elif p.estado == 'EN_RUTA' %} bg-indigo-100 text-indigo-800
+                                    {% elif p.estado == 'ENTREGADO' %} bg-green-100 text-green-800
+                                    {% else %} bg-red-100 text-red-800 
+                                    {% endif %}">
+                                    {{ p.get_estado_display }}
+                                </span>
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ p.fecha_creacion|date:"d M Y" }}
+                            </td>
+
+                            <td class="px-4 py-4 text-center whitespace-nowrap text-sm space-y-1">
+                                {# ACCIÓN DE CANCELAR / RECHAZAR - Visible si está ASIGNADO o EN_RUTA #}
+                                {% if p.estado == 'ASIGNADO' or p.estado == 'EN_RUTA' %}
+                                    <form method="POST" action="{% url 'frontend:manejar_pedido_action' pedido_id=p.id %}" 
+                                        onsubmit="return confirmCancel('{{ p.id|stringformat:"05d" }}')" class="inline-block mr-2">
+                                        {% csrf_token %}
+                                        {# El 'value="rechazar"' es lo que la vista de Django procesa #}
+                                        <button type="submit" name="action" value="rechazar" 
+                                            class="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition shadow-sm">
+                                            Cancelar
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                {# VER DETALLE #}
+                                <a href="{% url 'frontend:detalle_pedido' pk=p.id %}" 
+                                class="px-3 py-1 inline-block text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition shadow-sm">
+                                    Ver Detalle
+                                </a>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+            <div class="text-center py-10 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 mt-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No hay pedidos registrados</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    {% if user.tipo == 'MINORISTA' %}
+                        Actualmente no tienes órdenes de envío activas.
+                    {% else %}
+                        No tienes órdenes asignadas en este momento.
+                    {% endif %}
+                </p>
+                {# El botón de Crear Pedido se mantiene eliminado #}
+            </div>
+            {% endif %}
+
+            <div class="mt-12 pt-6 border-t border-gray-100 text-center text-sm text-gray-500">
+                Plataforma BOGOCARGO &copy; 2025. Todos los derechos reservados.
+            </div>
+
+        </div>
+    </main>
+    
+    {# SCRIPT DE CONFIRMACIÓN #}
+    <script>
+        function confirmCancel(pedidoId) {
+            return confirm("¿Está seguro de que desea CANCELAR el pedido BOCG-" + pedidoId + "? Esto lo desasignará de su cuenta y lo devolverá a estado PENDIENTE.");
+        }
+    </script>
+</body>
+</html>

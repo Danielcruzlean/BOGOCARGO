@@ -1,0 +1,9 @@
+{% extends "FRONTEND/base.html" %} 
+{% block content %}
+<div class="container text-center mt-5">
+    <h2>🔒 ¡Acceso Bloqueado Temporalmente!</h2>
+    <p>Has excedido el número máximo de intentos de inicio de sesión fallidos.</p>
+    <p>Por favor, inténtalo de nuevo más tarde o contacta al administrador.</p>
+    <a href="{% url 'frontend:index' %}" class="btn btn-primary">Volver al Inicio</a>
+</div>
+{% endblock content %}

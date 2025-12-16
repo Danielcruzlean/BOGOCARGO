@@ -1,0 +1,563 @@
+{% extends "FRONTEND/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Registrar Nueva Orden{% endblock %}
+
+{% block content %}
+
+<div class="max-w-xl mx-auto my-10 bg-white shadow-2xl rounded-2xl p-8 sm:p-12 border border-gray-200">
+    <h2 class="text-3xl font-extrabold text-gray-800 text-center mb-2">🚚 Registrar una Nueva Orden</h2>
+    <p class="text-center text-gray-500 text-sm mb-6">
+        Tu rol actual es:
+        <span class="font-bold text-indigo-600">
+            {{ request.user.tipo }}
+        </span>.
+        Completa los detalles de tu envío para obtener una cotización.
+    </p>
+
+    <hr class="my-6 border-gray-200">
+
+    {% if form.non_field_errors %}
+    <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+        <span class="font-medium">Error:</span>
+        {% for error in form.non_field_errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" id="pedido-form">
+        {% csrf_token %}
+
+        <h3 class="text-xl font-bold text-gray-700 mb-4 pb-2 border-b-2 border-indigo-100">Información de Recolección</h3>
+
+        {# Campo 1: Empresa Mayorista #}
+        <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_empresa_mayorista">Empresa Mayorista (Distribuidor)</label>
+            {{ form.empresa_mayorista|add_class:'input-field' }}
+            {% for error in form.empresa_mayorista.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        {# Grupo 2: Fecha y Hora de Recolección (en dos columnas pequeñas) #}
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_fecha_recoleccion">Fecha de Recolección</label>
+                {{ form.fecha_recoleccion|add_class:'input-field' }}
+                {% for error in form.fecha_recoleccion.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_hora_recoleccion">Horario (8 AM - 5 PM)</label>
+                <select id="id_hora_recoleccion" name="hora_recoleccion" class="input-field">
+                    <option value="" disabled {% if not form.hora_recoleccion.value %}selected{% endif %}>--- Seleccione la hora ---</option>
+                    {# Opciones en formato 12 horas con valores de 24 horas (HH:MM:SS) #}
+                    <option value="08:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "08:00:00" %}selected{% endif %}>8:00 AM</option>
+                    <option value="09:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "09:00:00" %}selected{% endif %}>9:00 AM</option>
+                    <option value="10:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "10:00:00" %}selected{% endif %}>10:00 AM</option>
+                    <option value="11:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "11:00:00" %}selected{% endif %}>11:00 AM</option>
+                    <option value="12:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "12:00:00" %}selected{% endif %}>12:00 PM</option>
+                    <option value="13:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "13:00:00" %}selected{% endif %}>1:00 PM</option>
+                    <option value="14:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "14:00:00" %}selected{% endif %}>2:00 PM</option>
+                    <option value="15:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "15:00:00" %}selected{% endif %}>3:00 PM</option>
+                    <option value="16:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "16:00:00" %}selected{% endif %}>4:00 PM</option>
+                    <option value="17:00:00" {% if form.hora_recoleccion.value|stringformat:"s" == "17:00:00" %}selected{% endif %}>5:00 PM</option>
+                </select>
+
+                {% for error in form.hora_recoleccion.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Campo 3: Dirección de Origen #}
+        <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_origen">Dirección de Origen (Fijo por Mayorista)</label>
+            {{ form.origen|add_class:'input-field' }}
+            {% for error in form.origen.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        {# Campo 4: Dirección de Destino #}
+        <div class="mb-8">
+            <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_destino">Dirección de Destino</label>
+            {{ form.destino|add_class:'input-field' }}
+            {% for error in form.destino.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+
+        <h3 class="text-xl font-bold text-gray-700 mt-8 mb-4 pt-4 border-t-2 border-indigo-100">Detalles de la Carga</h3>
+
+        {# Grupo 5: Tipo de Mercancía y Valor Declarado (en una columna cada uno) #}
+        <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_tipo_mercancia">Tipo de Mercancía</label>
+            {# El select se poblará por JavaScript #}
+            <select id="id_tipo_mercancia" name="{{ form.tipo_mercancia.name }}" class="input-field">
+                <option value="" disabled selected>--- Seleccione el tipo de mercancía ---</option>
+                <option value="FRAGIL">Frágil</option>
+                <option value="PERECEDEROS">Perecederos</option>
+                <option value="LIQUIDO">Líquido</option>
+                <option value="SOLIDO">Sólido</option>
+            </select>
+            {% for error in form.tipo_mercancia.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_valor_declarado">Valor De los Productos (COP)</label>
+            <input type="number" id="id_valor_declarado" name="valor_declarado"
+                        class="input-field"
+                        value="{% if form.valor_declarado.value|default_if_none:"" %}{{ form.valor_declarado.value }}{% endif %}"
+                        required min="0" step="1000">
+            <p id="valor-declarado-warning" class="text-xs text-orange-600 font-bold mt-1" style="display: none;">
+                ⚠️ El valor mínimo de los productos debe ser $100.000 COP para calcular el precio estimado.
+            </p>
+            {% for error in form.valor_declarado.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <p class="text-sm text-gray-500 mb-6 font-semibold">Dimensiones y Peso por Unidad</p>
+
+        {# Grupo 6: Peso por Unidad y Número de Unidades (en dos columnas pequeñas) #}
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_peso_por_unidad">Peso por Unidad (Kg)</label>
+                <input type="number" step="0.01" id="id_peso_por_unidad" name="peso_por_unidad"
+                            class="input-field"
+                            value="{% if not form.is_bound or form.peso_por_unidad.value is None or form.peso_por_unidad.value == '' or form.peso_por_unidad.value == '0' %}0.01{% else %}{{ form.peso_por_unidad.value }}{% endif %}"
+                            required min="0.01">
+                <p id="peso-por-unidad-error" class="text-xs text-red-500 mt-1" style="display: none;">El peso por unidad debe ser mayor a 0.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_unidades">Número de Unidades</label>
+                <input type="number" id="id_unidades" name="unidades"
+                            class="input-field"
+                            value="{% if form.unidades.value|default_if_none:"" %}{{ form.unidades.value }}{% else %}1{% endif %}"
+                            required min="1">
+            </div>
+        </div>
+
+        {# Grupo 7: Dimensiones (Largo, Alto, Ancho) y Peso Total (en cuatro columnas pequeñas) #}
+        <div class="grid grid-cols-4 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_largo">Largo (m)</label>
+                <input type="number" step="0.01" id="id_largo" name="largo"
+                            class="input-field"
+                            value="{% if form.largo.value|default_if_none:"" %}{{ form.largo.value }}{% endif %}"
+                            required min="0.01">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_alto">Alto (m)</label>
+                <input type="number" step="0.01" id="id_alto" name="alto"
+                            class="input-field"
+                            value="{% if form.alto.value|default_if_none:"" %}{{ form.alto.value }}{% endif %}"
+                            required min="0.01">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_ancho">Ancho (m)</label>
+                <input type="number" step="0.01" id="id_ancho" name="ancho"
+                            class="input-field"
+                            value="{% if form.ancho.value|default_if_none:"" %}{{ form.ancho.value }}{% endif %}"
+                            required min="0.01">
+            </div>
+
+            <div class="pt-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1" for="peso_total_display">Peso Total (Kg)</label>
+                <input type="text" id="peso_total_display" value="0.00" class="input-field font-bold bg-gray-100" readonly>
+                <input type="hidden" id="id_peso_total" name="peso_total" value="0.00">
+            </div>
+        </div>
+        <p class="text-sm text-gray-500 mb-8 mt-[-10px]">* Dimensiones por unidad de empaque.</p>
+
+        {# Campo 8: Observaciones #}
+        <div class="mb-8">
+            <label class="block text-sm font-semibold text-gray-700 mb-1" for="id_observaciones">Observaciones detalladas</label>
+            {{ form.observaciones|add_class:'input-field' }}
+            {% for error in form.observaciones.errors %}
+            <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        {# Bloque de Precio Estimado #}
+        <div class="p-5 rounded-xl border border-indigo-300 bg-indigo-50 shadow-lg mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h4 class="font-extrabold text-indigo-900 text-xl md:text-2xl">
+                        💰 Precio Estimado del Envío
+                    </h4>
+                    <p class="text-xs text-indigo-600 mt-1">
+                        *Estimación no contractual. Sujeto a validación.
+                    </p>
+                </div>
+
+                <div class="flex flex-col items-center md:items-end">
+                    <p id="precio-estimado-display" class="text-5xl font-black text-indigo-700">
+                        ---
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {# Botón de Envío #}
+        <div class="text-center">
+            <input type="hidden" id="id_precio_estimado" name="precio_estimado" value="">
+
+            <button type="submit"
+                        class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105">
+                🚚 Registrar Orden
+            </button>
+        </div>
+    </form>
+</div>
+
+{# Bloque de estilos CSS #}
+<style>
+    .input-field {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        background: #ffffff;
+        transition: all 0.2s ease-in-out;
+        font-size: 15px;
+        color: #1f2937;
+    }
+    .input-field:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+    textarea.input-field {
+        min-height: 100px;
+        resize: vertical;
+    }
+    select.input-field {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const addressMap = {
+            'ALIM_SUBA': 'Calle 145 # 103B - 56, Localidad de Suba',
+            'DIST_CHAPINERO': 'Carrera 7 # 60 - 32, Localidad de Chapinero',
+            'TECN_KENNEDY': 'Avenida Ciudad de Cali # 41A - 20 Sur, Localidad de Kennedy',
+            'HOGAR_USAQUEN': 'Carrera 15 # 120 - 80, Localidad de Usaquén',
+            'TEXTIL_ENGATIVA': 'Calle 80 # 70C - 35, Localidad de Engativá',
+            'FARM_BOSA': 'Carrera 86 # 61 Sur - 50, Localidad de Bosa',
+            'FERR_FONTIBON': 'Avenida El Dorado # 100 - 05, Localidad de Fontibón',
+            'BEBIDAS_CANDELARIA': 'Carrera 3 # 12 - 45, Localidad de La Candelaria',
+            'PLAST_SANTAFE': 'Calle 19 # 14 - 10, Localidad de Santa Fe',
+            'ELECTR_TUNJUELITO': 'Avenida Caracas # 53 Sur - 70, Localidad de Tunjuelito',
+            'CARN_PUENTE': 'Carrera 68D # 13 - 25, Localidad de Puente Aranda',
+            'GRANOS_RAFAEL': 'Calle 32 Sur # 24 - 10, Localidad de Rafael Uribe Uribe',
+            'PAPEL_CIUDAD': 'Carrera 38 # 59 Sur - 40, Localidad de Ciudad Bolívar',
+            'MUEBLES_ANTONIO': 'Carrera 20 # 10 Sur - 50, Localidad de San Cristóbal',
+            'AZUCAR_GAITAN': 'Avenida Carrera 30 # 2 - 15, Localidad de Antonio Nariño',
+            'LIMPIEZA_TEUSAQUILLO': 'Calle 53 # 16 - 35, Localidad de Teusaquillo',
+            'DEPORT_LOSMARTIRES': 'Carrera 13 # 24 - 15, Localidad de Los Mártires',
+            'QUIM_BARRIOS': 'Calle 72 # 68 - 10, Localidad de Barrios Unidos',
+            'ENVAS_SUMAPAZ': 'Vereda La Unión, Sector Sumapaz (Sede Principal)',
+            'FRUTAS_SUBA2': 'Avenida Suba # 118 - 45, Localidad de Suba (Sede 2)',
+        };
+
+        // --- MAPA DE RIESGO SIMPLIFICADO Y AJUSTADO ---
+        // Factores de riesgo para los 4 tipos de mercancía solicitados
+        const riskFactorMap = {
+            'FRAGIL': 1.25,      // Mayor Riesgo
+            'PERECEDEROS': 1.15, // Segundo Mayor Riesgo
+            'LIQUIDO': 1.10,     // Tercer Riesgo
+            'SOLIDO': 1.05,      // Menor Riesgo
+        };
+        // ----------------------------------------------
+
+        // Parámetros de costo
+        const BASE_RATE_COP = 15000;
+        const WEIGHT_COST_PER_KG_COP = 1200;
+        const VOLUME_COST_PER_M3_COP = 80000;
+        const MIN_VALOR_DECLARADO = 100000;
+
+        let currentDistanceFactor = 1.0;
+
+        // Referencias a los elementos del DOM
+        const mayoristaSelect = document.getElementById('id_empresa_mayorista');
+        const origenInput = document.getElementById('id_origen');
+        const destinoInput = document.getElementById('id_destino');
+        const tipoMercanciaSelect = document.getElementById('id_tipo_mercancia'); // Ya no se llena por JS
+        const fechaRecoleccionInput = document.getElementById('id_fecha_recoleccion');
+        const horaRecoleccionSelect = document.getElementById('id_hora_recoleccion');
+
+        // Campos de Peso
+        const pesoPorUnidadInput = document.getElementById('id_peso_por_unidad');
+        const pesoTotalDisplay = document.getElementById('peso_total_display');
+        const pesoTotalHiddenInput = document.getElementById('id_peso_total');
+        const pesoPorUnidadError = document.getElementById('peso-por-unidad-error');
+
+        const valorDeclaradoInput = document.getElementById('id_valor_declarado');
+        const precioDisplay = document.getElementById('precio-estimado-display');
+        const precioEstimadoHiddenInput = document.getElementById('id_precio_estimado');
+        const valorDeclaradoWarning = document.getElementById('valor-declarado-warning');
+
+        const unidadesInput = document.getElementById('id_unidades');
+        const largoInput = document.getElementById('id_largo');
+        const altoInput = document.getElementById('id_alto');
+        const anchoInput = document.getElementById('id_ancho');
+        const form = document.getElementById('pedido-form');
+
+        // Establecer la fecha mínima de recolección como hoy
+        function setMinDate() {
+            if (fechaRecoleccionInput) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const minDate = `${year}-${month}-${day}`;
+
+                fechaRecoleccionInput.setAttribute('min', minDate);
+            }
+        }
+
+        // Actualiza la dirección de origen al cambiar el mayorista
+        function updateOrigenAddress() {
+            const selectedKey = mayoristaSelect.value;
+            const address = addressMap[selectedKey];
+
+            if (origenInput) {
+                if (address) {
+                    origenInput.value = address;
+                    origenInput.setAttribute('readonly', true);
+                    origenInput.style.backgroundColor = '#e5e7eb'; // gray-200
+                } else {
+                    origenInput.value = '';
+                    origenInput.placeholder = 'Seleccione una empresa para ver la dirección de origen.';
+                    origenInput.removeAttribute('readonly');
+                    origenInput.style.backgroundColor = '#ffffff';
+                }
+            }
+            calculateShippingPrice();
+        }
+
+        // Función para manejar la advertencia del Valor Declarado
+        function checkValorDeclaradoMinimum(value) {
+            const valor = parseFloat(value) || 0;
+            if (valor < MIN_VALOR_DECLARADO && valor > 0) {
+                valorDeclaradoWarning.style.display = 'block';
+            } else {
+                valorDeclaradoWarning.style.display = 'none';
+            }
+        }
+
+        // Función para calcular el Peso Total y validar Peso por Unidad
+        function calculateAndUpdateTotalWeight() {
+            const pesoUnidad = parseFloat(pesoPorUnidadInput.value) || 0.0;
+            const unidades = parseInt(unidadesInput.value) || 0;
+
+            let totalWeight = pesoUnidad * unidades;
+
+            if (isNaN(totalWeight) || totalWeight < 0) {
+                totalWeight = 0;
+            }
+
+            pesoTotalDisplay.value = totalWeight.toFixed(2);
+            pesoTotalHiddenInput.value = totalWeight.toFixed(2);
+
+            return totalWeight;
+        }
+
+        // Configura atributos min/step y listeners de validación básica
+        function setupMinMaxListeners() {
+            const fields = [
+                { element: pesoPorUnidadInput, min: 0.01, step: 0.01 },
+                { element: unidadesInput, min: 1, step: 1 },
+                { element: largoInput, min: 0.01, step: 0.01 },
+                { element: altoInput, min: 0.01, step: 0.01 },
+                { element: anchoInput, min: 0.01, step: 0.01 },
+                { element: valorDeclaradoInput, min: 0, step: 1000 },
+            ];
+
+            fields.forEach(field => {
+                if (field.element) {
+                    field.element.setAttribute('min', field.min);
+                    if (field.step) {
+                        field.element.setAttribute('step', field.step);
+                    }
+
+                    field.element.addEventListener('input', (e) => {
+                        let value = parseFloat(e.target.value);
+
+                        // Asegura que no sea menor que el mínimo, excepto para valor_declarado que puede ser 0
+                        if (e.target.id !== 'id_valor_declarado' && value < field.min) {
+                            e.target.value = field.min;
+                        } else if (e.target.id === 'id_valor_declarado' && value < field.min) {
+                            e.target.value = field.min;
+                        }
+
+                        if (e.target === valorDeclaradoInput) {
+                            checkValorDeclaradoMinimum(e.target.value);
+                        }
+
+                        if (e.target === pesoPorUnidadInput || e.target === unidadesInput) {
+                            calculateAndUpdateTotalWeight();
+                        }
+
+                        calculateShippingPrice();
+                    });
+                    // Para asegurar que el peso total se recalcule si se borran campos o al perder foco
+                    field.element.addEventListener('change', (e) => {
+                        if (e.target === pesoPorUnidadInput || e.target === unidadesInput) {
+                            calculateAndUpdateTotalWeight();
+                        }
+                        calculateShippingPrice();
+                    });
+                }
+            });
+        }
+
+        // Calcula el precio estimado basado en los datos del formulario
+        function calculateShippingPrice() {
+            const mayoristaSelected = mayoristaSelect.value;
+            const tipoMercancia = tipoMercanciaSelect.value;
+
+            const peso = parseFloat(pesoTotalHiddenInput.value) || 0;
+            const pesoUnidad = parseFloat(pesoPorUnidadInput.value) || 0;
+            const destino = destinoInput.value ? destinoInput.value.trim() : '';
+            const valorDeclarado = parseFloat(valorDeclaradoInput.value) || 0;
+
+            const unidades = parseInt(unidadesInput.value) || 0;
+            const largo = parseFloat(largoInput.value) || 0;
+            const alto = parseFloat(altoInput.value) || 0;
+            const ancho = parseFloat(anchoInput.value) || 0;
+
+            const volumenTotal = largo * alto * ancho * unidades;
+
+            // --- VALIDACIONES PARA EL CÁLCULO ---
+            if (!mayoristaSelected || !tipoMercancia || destino.length < 5 || valorDeclarado < MIN_VALOR_DECLARADO || pesoUnidad <= 0 || unidades < 1 || largo <= 0 || alto <= 0 || ancho <= 0) {
+                if (precioDisplay) {
+                    precioDisplay.textContent = '---';
+                    precioEstimadoHiddenInput.value = '';
+                }
+
+                valorDeclaradoWarning.style.display = (valorDeclarado < MIN_VALOR_DECLARADO && valorDeclarado > 0) ? 'block' : 'none';
+                pesoPorUnidadError.style.display = (pesoUnidad <= 0 && unidades >= 1) ? 'block' : 'none';
+
+                return;
+            } else {
+                valorDeclaradoWarning.style.display = 'none';
+                pesoPorUnidadError.style.display = 'none';
+            }
+
+            // --- FÓRMULA DE COSTO ---
+            let totalCost = BASE_RATE_COP;
+
+            // Costo por Peso y Volumen
+            totalCost += peso * WEIGHT_COST_PER_KG_COP;
+            totalCost += volumenTotal * VOLUME_COST_PER_M3_COP;
+
+            // Factor de Riesgo (simplificado: 1.05 para SOLIDO, 1.25 para FRAGIL)
+            const riskFactor = riskFactorMap[tipoMercancia] || 1.0;
+            totalCost *= riskFactor;
+
+            // Factor de Distancia (simulado)
+            totalCost *= currentDistanceFactor;
+
+            const roundedPrice = Math.ceil(totalCost / 500) * 500;
+
+            const formattedPrice = roundedPrice.toLocaleString('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0
+            });
+
+            if (precioDisplay) {
+                precioDisplay.textContent = formattedPrice;
+                precioEstimadoHiddenInput.value = roundedPrice; // Guardar el valor numérico
+            }
+        }
+
+        // Simula el cálculo de un factor de distancia al perder el foco en Destino
+        function generateNewDistanceFactor() {
+            const destino = destinoInput.value.trim();
+
+            if (destino.length >= 5 && destino !== destinoInput.dataset.lastValue) {
+                // Genera un factor de distancia aleatorio entre 1.0 y 1.5
+                currentDistanceFactor = 1.0 + Math.random() * 0.5;
+                destinoInput.dataset.lastValue = destino;
+            }
+            calculateShippingPrice();
+        }
+
+        // Listener para capturar el precio estimado antes de enviar el formulario
+        form.addEventListener('submit', function(e) {
+            calculateShippingPrice();
+
+            if (!precioEstimadoHiddenInput.value || parseFloat(precioEstimadoHiddenInput.value) <= 0) {
+                e.preventDefault();
+                alert('Por favor, complete todos los campos requeridos (incluido el valor declarado mínimo, peso por unidad y las dimensiones/unidades) para calcular el Precio Estimado antes de registrar la orden.');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+
+
+        // Inicialización y Listeners
+        if (mayoristaSelect && origenInput && destinoInput && tipoMercanciaSelect && fechaRecoleccionInput && horaRecoleccionSelect && pesoPorUnidadInput && pesoTotalHiddenInput && valorDeclaradoInput && unidadesInput && largoInput && altoInput && anchoInput) {
+
+            setMinDate();
+            setupMinMaxListeners();
+
+            // Listeners para los campos que dependen de la selección del mayorista
+            mayoristaSelect.addEventListener('change', () => {
+                updateOrigenAddress();
+                // Ya no llama a updateMerchandiseOptions()
+            });
+
+            // Eventos para recalcular el peso total y el precio
+            const recalculateInputs = [
+                tipoMercanciaSelect, pesoPorUnidadInput, unidadesInput, largoInput, altoInput, anchoInput, valorDeclaradoInput, horaRecoleccionSelect, fechaRecoleccionInput
+            ];
+
+            recalculateInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (input === pesoPorUnidadInput || input === unidadesInput) {
+                        calculateAndUpdateTotalWeight();
+                    }
+                    calculateShippingPrice();
+                });
+                input.addEventListener('change', () => {
+                    if (input === pesoPorUnidadInput || input === unidadesInput) {
+                        calculateAndUpdateTotalWeight();
+                    }
+                    calculateShippingPrice();
+                });
+            });
+
+            destinoInput.addEventListener('blur', generateNewDistanceFactor);
+            destinoInput.addEventListener('input', calculateShippingPrice);
+
+            // Carga inicial
+            updateOrigenAddress();
+            calculateAndUpdateTotalWeight();
+            checkValorDeclaradoMinimum(valorDeclaradoInput.value);
+            calculateShippingPrice();
+
+        } else {
+            console.error("Error: Faltan elementos requeridos. Verifica los IDs del formulario Django.");
+        }
+    });
+</script>
+{% endblock content %}

@@ -1,44 +1,62 @@
-{% extends 'FRONTEND/base.html' %} 
-
+{% extends 'FRONTEND/admin_crud/base_admin.html' %}
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
+<style>
+/* 🛠️ AJUSTES DE ESTILO PARA GARANTIZAR LOS BORDES NEGROS EN LA TABLA */
+.table.table-dark.table-bordered {
+    border: 2px solid black !important;
+}
+.table.table-dark.table-bordered th, 
+.table.table-dark.table-bordered td {
+    border: 1px solid black !important;
+}
+</style>
+
 <div class="container mt-5">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-users-cog me-2"></i> {{ titulo }}</h2>
-        <a href="{% url 'frontend:usuarios_create' %}" class="btn btn-success shadow-sm">
-            <i class="fas fa-user-plus me-1"></i> Crear Nuevo Usuario
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded-3 shadow-sm border-start border-5 border-primary">
+        <h2 class="h3 mb-0 text-dark"><i class="fas fa-users-cog me-2 text-primary"></i> {{ titulo }}</h2>
+        <div class="d-flex">
+            <a href="{% url 'frontend:dashboard' %}" class="btn btn-outline-secondary shadow-sm fw-bold me-2">
+                <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
+            </a>
+            <a href="{% url 'frontend:usuarios_create' %}" class="btn btn-primary shadow-sm fw-bold">
+                <i class="fas fa-user-plus me-1"></i> Crear Nuevo Usuario
+            </a>
+        </div>
     </div>
-
+    
     {% include 'FRONTEND/includes/messages.html' %} 
     
-    <div class="card shadow">
-        <div class="card-body">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-dark text-warning p-3 h5">
+            Listado de Usuarios Registrados
+        </div>
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
+                <table class="table table-dark table-bordered align-middle mb-0"> 
                     <thead class="table-dark">
                         <tr>
-                            <th>ID</th>
+                            <th class="text-center" style="width: 5%;">ID</th>
                             <th>Nombre Completo</th>
                             <th>Email</th>
-                            <th>Rol</th>
-                            <th>Último Acceso</th>
-                            <th style="width: 180px;">Acciones</th>
+                            <th style="width: 10%;">Rol</th>
+                            <th style="width: 15%;">Último Acceso</th>
+                            <th class="text-center" style="width: 180px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for usuario in usuarios %}
                         <tr>
-                            <td>{{ usuario.id }}</td>
-                            <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
+                            <td class="text-center">{{ usuario.id }}</td>
+                            <td class="fw-bold">{{ usuario.nombre }} {{ usuario.apellido }}</td>
                             <td>{{ usuario.email }}</td>
                             <td>
-                                <span class="badge 
+                                <span class="badge rounded-pill fw-bold p-2 
                                 {% if usuario.tipo == 'ADMIN' %}bg-danger
                                 {% elif usuario.tipo == 'CONDUCTOR' %}bg-warning text-dark
-                                {% else %}bg-info{% endif %}">
+                                {% else %}bg-info text-dark{% endif %}">
                                     {{ usuario.tipo }}
                                 </span>
                             </td>
@@ -46,33 +64,45 @@
                                 {% if usuario.last_login %}
                                     {{ usuario.last_login|date:"d M, Y H:i" }}
                                 {% else %}
-                                    Nunca
+                                    N/A
                                 {% endif %}
                             </td>
-                            <td>
-                                <a href="{% url 'frontend:usuarios_update' pk=usuario.id %}" class="btn btn-sm btn-primary me-2">
-                                    <i class="fas fa-edit"></i> Editar
-                                </a>
-                                
-                                {% if usuario != request.user %}
-                                    <form method="POST" action="{% url 'frontend:usuarios_delete' pk=usuario.id %}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar al usuario {{ usuario.email }}? ¡Esta acción es irreversible!');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i> Eliminar
+                            <td class="text-center">
+                                <div class="btn-group" role="group" aria-label="Acciones de Usuario">
+                                    <a href="{% url 'frontend:usuarios_update' pk=usuario.id %}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar Usuario">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    {% if usuario != request.user %}
+                                        {# SOLUCIÓN: Formulario de Eliminación Directa #}
+                                        <form method="POST" action="{% url 'frontend:usuarios_delete' pk=usuario.id %}" 
+                                            onsubmit="return confirm('¿Estás seguro de que deseas eliminar permanentemente al usuario {{ usuario.email }}?');" 
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Eliminar Usuario">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled data-bs-toggle="tooltip" title="No puedes eliminar tu propia cuenta">
+                                            <i class="fas fa-lock"></i>
                                         </button>
-                                    </form>
-                                {% else %}
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
-                                        <i class="fas fa-lock"></i> Admin Actual
-                                    </button>
-                                {% endif %}
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% if not usuarios %}
+            <div class="text-center p-4 text-muted">
+                <i class="fas fa-exclamation-circle me-1"></i> No hay usuarios registrados en el sistema.
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+{# El Modal y el Script JavaScript dinámico han sido eliminados de aquí. #}
 {% endblock %}

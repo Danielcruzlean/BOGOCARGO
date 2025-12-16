@@ -1,36 +1,48 @@
-from django.contrib.auth.backends import ModelBackend
+# BACKEND/backends.py
+
+from django.contrib.auth.backends import BaseBackend 
 from django.contrib.auth import get_user_model
+from django.db.models import Q 
 
-class EmailAuthBackend(ModelBackend):
+UserModel = get_user_model()
+
+class EmailAuthBackend(BaseBackend): 
     """
-    Backend de autenticación personalizado.
-    Permite autenticar usuarios usando el campo 'email' como identificador
-    en lugar del campo 'username' por defecto.
+    Backend de autenticación personalizado, puro.
+    Autentica usuarios usando el campo 'email' como identificador.
     """
-    def authenticate(self, request, username=None, password=None, **kwargs):
-        UserModel = get_user_model()
+    def authenticate(self, request, email=None, password=None, **kwargs):
         
-        # El valor que recibimos como 'username' es en realidad el email.
-        email = username 
-
+        # Unificar el identificador, que siempre debería ser 'email'
         if email is None:
-            email = kwargs.get(UserModel.USERNAME_FIELD)
+            email = kwargs.get('email')
+        
+        if not email:
+            return None
         
         try:
-            # 1. Buscar al usuario por el email (que es la clave de autenticación)
-            user = UserModel.objects.get(email=email)
+            # Buscar al usuario por el email (case-insensitive)
+            # Nota: Si usas Q, debes importar Q de django.db.models
+            user = UserModel.objects.get(email__iexact=email) 
         except UserModel.DoesNotExist:
-            # Si el usuario no existe con ese email, retornamos None
             return None
 
-        # 2. Verificar la contraseña
+        # 1. Verificar la contraseña
         if user.check_password(password):
-            return user
+            
+            # 2. Verificar el estado de la cuenta (is_active)
+            if user.is_active:
+                # 🎯 ÉXITO: Credenciales correctas y usuario activo.
+                return user
+            else:
+                # Usuario inactivo (credenciales correctas, pero no puede iniciar sesión)
+                return None
+        
+        # 3. Contraseña incorrecta
         return None
         
     def get_user(self, user_id):
         """Método necesario para la gestión de sesiones."""
-        UserModel = get_user_model()
         try:
             return UserModel.objects.get(pk=user_id)
         except UserModel.DoesNotExist:

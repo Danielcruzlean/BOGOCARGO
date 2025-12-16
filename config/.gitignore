@@ -1,0 +1,25 @@
+# Secretos y Variables de Entorno
+.env
+
+# Base de datos local (si usas SQLite alguna vez)
+*.sqlite3
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de sistema y carpetas de editores
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Archivos estáticos recolectados y media
+staticfiles/
+media/

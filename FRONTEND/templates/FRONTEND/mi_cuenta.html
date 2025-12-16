@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Cuenta | Acceso BOGOCARGO</title>
+    <title>Acceso | BOGOCARGO</title>
+    
+    <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+    
+    <script src="//unpkg.com/alpinejs" defer></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c9cQQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -18,15 +24,72 @@
         }
         [x-cloak] { display: none !important; }
         
-        /* Estilos de mensajes para Django */
+        /* Estilos de mensajes para Django (Mocked up) */
         .msg-error { background-color: #fee2e2; border-color: #ef4444; color: #b91c1c; }
         .msg-success { background-color: #d1fae5; border-color: #10b981; color: #065f46; }
         .msg-warning { background-color: #fef3c7; border-color: #f59e0b; color: #92400e; }
+        
+        .recaptcha-error {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
-    {% include 'FRONTEND/_header.html' %}
     
+    <header class="bg-[#1f2937] shadow-xl border-b border-gray-700 p-4 sticky top-0 z-10">
+        <div class="container mx-auto flex justify-between items-center">
+            
+            <a href="{% url 'frontend:index' %}" class="text-3xl font-extrabold text-white hover:text-gray-300 transition duration-150 tracking-wider">
+                BOGOCARGO
+            </a>
+            
+            <nav class="flex items-center space-x-6">
+                
+                <a href="{% url 'frontend:index' %}" 
+                class="text-white hover:text-white px-3 py-2 transition duration-150 font-semibold relative group">
+                    Inicio
+                    <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-0.5 bg-indigo-500 transition-all duration-300 opacity-100"></span>
+                </a>
+
+                <a href="{% url 'frontend:servicios' %}" 
+                class="text-gray-300 hover:text-white px-3 py-2 transition duration-150 font-semibold relative group">
+                    Servicios
+                    <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-indigo-500 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'frontend:dashboard' %}" 
+                        class="text-gray-300 hover:text-white px-3 py-2 transition duration-150 font-semibold relative group">
+                        Dashboard
+                        <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-indigo-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    
+                    <a href="{% url 'frontend:dashboard' %}" 
+                        class="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-xl transition duration-150 font-bold shadow-lg ml-4">
+                        Mi Cuenta
+                    </a>
+                    
+                {% else %}
+                    <a href="{% url 'frontend:mi_cuenta' %}" 
+                    class="text-gray-300 hover:text-white px-3 py-2 transition duration-150 font-semibold relative group">
+                        Acceso / Registro
+                        <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-indigo-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    
+                    <a href="{% url 'frontend:mi_cuenta' %}" 
+                    class="bg-[#6366f1] text-white hover:bg-[#4f46e5] px-4 py-2 rounded-xl transition duration-150 font-bold shadow-lg ml-4 text-base tracking-wide">
+                        Mi Cuenta
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
     <main class="container mx-auto p-4 sm:p-8 lg:p-12">
         <div class="bg-white shadow-2xl rounded-2xl p-6 sm:p-10 max-w-lg mx-auto">
 
@@ -50,15 +113,31 @@
                 </div>
             {% endif %}
             
-            <div x-data="{ currentTab: 'login' }" class="w-full">
+            <div x-data="{ 
+                    // Si existe la variable errors_register, inicia en la pestaña de registro
+                    currentTab: '{% if errors_register %}register{% else %}login{% endif %}', 
+                    
+                    // Función optimizada para resetear reCAPTCHA. 
+                    resetRecaptcha(targetTab) {
+                        if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+                            if (targetTab === 'register' && registerRecaptchaId !== undefined) {
+                                grecaptcha.reset(registerRecaptchaId);
+                            }
+                            if (targetTab === 'login' && loginRecaptchaId !== undefined) {
+                                grecaptcha.reset(loginRecaptchaId);
+                            }
+                        }
+                    } 
+                }" 
+                class="w-full">
                 
                 <div class="flex border-b border-gray-200 mb-6">
-                    <button @click="currentTab = 'login'" 
+                    <button @click="currentTab = 'login'; resetRecaptcha('login')" 
                             :class="{ 'border-indigo-600 text-indigo-600': currentTab === 'login', 'border-transparent text-gray-500 hover:text-gray-700': currentTab !== 'login' }"
                             class="flex-1 py-3 px-1 text-center font-medium text-lg border-b-2 transition duration-300">
                         Iniciar Sesión
                     </button>
-                    <button @click="currentTab = 'register'" 
+                    <button @click="currentTab = 'register'; resetRecaptcha('register')" 
                             :class="{ 'border-indigo-600 text-indigo-600': currentTab === 'register', 'border-transparent text-gray-500 hover:text-gray-700': currentTab !== 'register' }"
                             class="flex-1 py-3 px-1 text-center font-medium text-lg border-b-2 transition duration-300">
                         Registrarse
@@ -66,46 +145,70 @@
                 </div>
 
                 <div x-show="currentTab === 'login'" x-transition:enter.duration.500ms x-cloak>
-                    <form method="POST" action="{% url 'frontend:login' %}" class="space-y-6">
+                    <form method="POST" action="{% url 'frontend:login' %}" 
+                        class="space-y-6" x-data="{ showPass: false }" 
+                        id="loginForm" onsubmit="return validateForm(event, 'login')">
                         {% csrf_token %}
                         <p class="text-gray-600 text-sm mb-4">Ingresa tus credenciales para acceder a tu cuenta.</p>
                         
                         <div>
                             <label for="login_user" class="block text-sm font-medium text-gray-700 mb-1">Usuario o Email</label>
-                            <input type="text" id="login_user" name="username" required
+                            <input type="text" id="login_user" name="email" required
                                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
                                 placeholder="tu.usuario@bogocargo.com">
                         </div>
 
-                        <div>
+                        <div class="relative">
                             <label for="login_pass" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                            <input type="password" id="login_pass" name="password" required
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                            <input :type="showPass ? 'text' : 'password'" id="login_pass" name="password" required
+                                class="mt-1 block w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
                                 placeholder="Mínimo 8 caracteres">
+                            
+                            <button type="button" @click="showPass = !showPass" 
+                                    class="absolute inset-y-0 right-0 top-6 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <i :class="showPass ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                            </button>
                         </div>
+                        
+                        <div id="recaptcha-login-error" class="recaptcha-error hidden">
+                            Por favor, confirma que no eres un robot.
+                        </div>
+                        <div id="recaptcha-login-widget" class="flex justify-center">
+                            </div>
                         
                         <div class="pt-2">
                             <button type="submit"
-                                        class="w-full px-4 py-3 bg-indigo-600 text-white font-bold text-lg rounded-xl shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 transition duration-300">
+                                    class="w-full px-4 py-3 bg-indigo-600 text-white font-bold text-lg rounded-xl shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 transition duration-300">
                                 Iniciar Sesión
                             </button>
                         </div>
                         
                         <div class="text-center text-sm text-gray-500 mt-4">
-                            <a href="{% url 'password_reset' %}" class="text-indigo-600 hover:text-indigo-800">¿Olvidaste tu contraseña?</a>
+                        <a href="{% url 'frontend:password_reset' %}" class="text-indigo-600 hover:text-indigo-800 font-medium">
+    ¿Olvidaste tu contraseña?
+</a>
                         </div>
                     </form>
                 </div>
 
                 <div x-show="currentTab === 'register'" x-transition:enter.duration.500ms x-cloak>
-                    <form method="POST" action="{% url 'frontend:register' %}" class="space-y-6">
+                    <form method="POST" action="{% url 'frontend:register' %}" class="space-y-6" 
+                        x-data="{ showPassReg: false, password: '', passwordConfirm: '' }"
+                        id="registerForm" onsubmit="return validateForm(event, 'register')">
                         {% csrf_token %}
                         <p class="text-gray-600 text-sm mb-4">Crea una cuenta y selecciona tu rol principal en la plataforma.</p>
                         
-                        <div>
-                            <label for="reg_nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
-                            <input type="text" id="reg_nombre" name="full_name" required
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150">
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label for="reg_first_name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                                <input type="text" id="reg_first_name" name="nombre" required
+                                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150">
+                            </div>
+                            <div class="flex-1">
+                                <label for="reg_last_name" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                                <input type="text" id="reg_last_name" name="apellido" required
+                                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150">
+                            </div>
                         </div>
                         
                         <div>
@@ -117,26 +220,57 @@
                         
                         <div>
                             <label for="reg_role" class="block text-sm font-medium text-gray-700 mb-1">Selecciona tu Rol</label>
-                            <select id="reg_role" name="role" required
-                                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150 appearance-none bg-white">
+                            <select id="reg_role" name="tipo" required
+                                    class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none transition duration-150 appearance-none bg-white">
                                 <option value="">--- Seleccionar ---</option>
                                 <option value="MINORISTA">MINORISTA (Necesito hacer envíos)</option>
                                 <option value="CONDUCTOR">CONDUCTOR (Ofrezco servicios de carga)</option>
-                                <option value="ADMIN">ADMIN (Administración del sistema)</option>
-                            </select>
+                                </select>
                             <p class="text-xs text-gray-500 mt-1">Tu rol determinará las vistas y permisos que tendrás.</p>
                         </div>
 
-                        <div>
+                        <div class="relative">
                             <label for="reg_pass" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                            <input type="password" id="reg_pass" name="password" required
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                            <input :type="showPassReg ? 'text' : 'password'" id="reg_pass" name="password" required
+                                @input="password = $event.target.value"
+                                class="mt-1 block w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
                                 placeholder="Mínimo 8 caracteres">
+                            
+                            <button type="button" @click="showPassReg = !showPassReg" 
+                                    class="absolute inset-y-0 right-0 top-6 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <i :class="showPassReg ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                            </button>
                         </div>
 
+                        <div class="relative">
+                            <label for="reg_pass_confirm" class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                            <input :type="showPassReg ? 'text' : 'password'" id="reg_pass_confirm" name="password2" required
+                                @input="passwordConfirm = $event.target.value"
+                                class="mt-1 block w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none transition duration-150"
+                                placeholder="Repite la contraseña">
+                            
+                            <button type="button" @click="showPassReg = !showPassReg" 
+                                    class="absolute inset-y-0 right-0 top-6 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <i :class="showPassReg ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                            </button>
+                            
+                            <p x-cloak x-show="password !== passwordConfirm && passwordConfirm.length > 0" 
+                            class="mt-2 text-sm text-red-600">
+                                ⚠️ Las contraseñas no coinciden.
+                            </p>
+                        </div>
+                        
+                        <div id="recaptcha-register-error" class="recaptcha-error hidden">
+                            Por favor, confirma que no eres un robot.
+                        </div>
+                        <div id="recaptcha-register-widget" class="flex justify-center">
+                            </div>
+                        
                         <div class="pt-2">
                             <button type="submit"
-                                        class="w-full px-4 py-3 bg-emerald-600 text-white font-bold text-lg rounded-xl shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500 transition duration-300">
+                                :disabled="password !== passwordConfirm || password.length === 0"
+                                :class="{ 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500': password === passwordConfirm && password.length > 0, 'bg-gray-400 cursor-not-allowed': password !== passwordConfirm || password.length === 0 }"
+                                class="w-full px-4 py-3 text-white font-bold text-lg rounded-xl shadow-md focus:outline-none focus:ring-4 transition duration-300">
                                 Crear Cuenta
                             </button>
                         </div>
@@ -145,6 +279,71 @@
             </div>
             </div>
     </main>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    
+    <script>
+        // IDs globales para manejar los widgets de reCAPTCHA
+        let loginRecaptchaId;
+        let registerRecaptchaId;
+        // Clave pública (debe ser la misma en el widget y en el render)
+        // **IMPORTANTE: Reemplaza esta clave con tu clave real de reCAPTCHA v2**
+        const SITEKEY = "6LcmVB8sAAAAAL6i5yfibFUJZYyoJykh1nefYw47"; 
+
+        /**
+         * Función que se llama cuando Google reCAPTCHA está listo.
+         * Renderiza los widgets con IDs específicos para poder resetearlos.
+         */
+        function onloadCallback() {
+            // Renderizar widget de Login
+            const loginWidget = document.getElementById('recaptcha-login-widget');
+            if (loginWidget) {
+                loginRecaptchaId = grecaptcha.render(loginWidget, {
+                    'sitekey': SITEKEY,
+                    'theme': 'light'
+                });
+            }
+
+            // Renderizar widget de Registro
+            const registerWidget = document.getElementById('recaptcha-register-widget');
+            if (registerWidget) {
+                registerRecaptchaId = grecaptcha.render(registerWidget, {
+                    'sitekey': SITEKEY,
+                    'theme': 'light'
+                });
+            }
+        }
+        
+        /**
+         * Función que valida si el reCAPTCHA ha sido completado.
+         */
+        function validateForm(event, formType) {
+            const recaptchaId = formType === 'login' ? loginRecaptchaId : registerRecaptchaId;
+            const response = grecaptcha.getResponse(recaptchaId);
+            const errorElement = document.getElementById(`recaptcha-${formType}-error`);
+            
+            // Oculta el error previo
+            if (errorElement) {
+                errorElement.classList.add('hidden');
+            }
+            
+            if (response.length === 0) {
+                // reCAPTCHA no está marcado
+                event.preventDefault(); // Previene el envío del formulario
+                
+                if (errorElement) {
+                    errorElement.classList.remove('hidden'); // Muestra el error
+                }
+                
+                // Resetea para que el usuario pueda volver a intentarlo
+                grecaptcha.reset(recaptchaId); 
+                
+                return false;
+            }
+            
+            // reCAPTCHA marcado, permite el envío. 
+            // La validación real de si el token es válido se hará en el servidor.
+            return true;
+        }
+
+    </script>
 </body>
 </html>

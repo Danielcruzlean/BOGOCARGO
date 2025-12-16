@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import DetallePedido, Pedidos
+from FRONTEND.models import DetallePedido, Pedidos
 
 def calcular_peso_total(instance):
     pedido = instance.pedido

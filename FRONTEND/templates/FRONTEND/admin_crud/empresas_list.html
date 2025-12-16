@@ -1,0 +1,89 @@
+{% extends 'FRONTEND/admin_crud/base_admin.html' %}
+{% block title %}Listado de Mayoristas{% endblock %}
+
+{% block content %}
+<style>
+/* 🛠️ AJUSTES DE ESTILO PARA LA TABLA */
+.table.table-dark.table-bordered {
+    border: 2px solid black !important;
+}
+.table.table-dark.table-bordered th, 
+.table.table-dark.table-bordered td {
+    border: 1px solid black !important;
+}
+</style>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded-3 shadow-sm border-start border-5 border-primary">
+        <h2 class="h3 mb-0 text-dark"><i class="fas fa-truck-loading me-2 text-primary"></i> Empresas Mayoristas (Origen)</h2>
+        <div class="d-flex">
+            <a href="{% url 'frontend:dashboard' %}" class="btn btn-outline-secondary shadow-sm fw-bold me-2">
+                <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
+            </a>
+            <a href="{% url 'frontend:mayoristas_create' %}" class="btn btn-primary shadow-sm fw-bold">
+                <i class="fas fa-industry me-1"></i> Crear Nuevo Mayorista
+            </a>
+        </div>
+    </div>
+    
+    {% include 'FRONTEND/includes/messages.html' %} 
+    
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-dark text-warning p-3 h5"> 
+            Listado de Empresas Mayoristas Registradas
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-bordered align-middle mb-0"> 
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center" style="width: 5%;">ID</th>
+                            <th>Nombre Comercial</th>
+                            <th>NIT / ID</th>
+                            <th>Ciudad</th>
+                            <th class="text-center" style="width: 150px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mayorista in mayoristas %}
+                        <tr>
+                            <td class="text-center">{{ mayorista.pk }}</td>
+                            <td class="fw-bold">{{ mayorista.nombre }}</td>
+                            <td>{{ mayorista.nit }}</td>
+                            <td>{{ mayorista.ciudad }}</td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group" aria-label="Acciones de Mayorista">
+                                    
+                                    {# BOTÓN EDITAR #}
+                                    <a href="{% url 'frontend:mayoristas_update' pk=mayorista.pk %}" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar Mayorista">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    {# SOLUCIÓN: Formulario de Eliminación Directa #}
+                                    <form method="POST" action="{% url 'frontend:mayoristas_delete' pk=mayorista.pk %}" 
+                                        onsubmit="return confirm('¿Estás seguro de que deseas eliminar permanentemente a la empresa {{ mayorista.nombre }}?');" 
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar Mayorista">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if not mayoristas %}
+            <div class="text-center p-4 text-muted">
+                <i class="fas fa-exclamation-circle me-1"></i> No hay empresas mayoristas registradas.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# Se eliminan el Modal y el Script JavaScript dinámico que causaban el fallo #}
+{% endblock content %}

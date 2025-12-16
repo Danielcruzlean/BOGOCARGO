@@ -1,87 +1,73 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOGOCARGO | Logística Mayorista y Minorista</title>
+    <title>BOGOCARGO | Logística de Confianza en Bogotá</title> 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            /* Fondo muy oscuro para el modo noche */
-            background-color: #111827; 
-            min-height: 100vh;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .hero-bg { background-image: url('{% static "img/bogota_bg.jpg" %}'); background-size: cover; background-position: center; }
     </style>
 </head>
-<body>
-    <!-- Asumiendo que el encabezado también es compatible con el modo oscuro -->
-    {% include 'FRONTEND/_header.html' %}
+<body class="min-h-screen flex flex-col">
     
-    <main class="container mx-auto p-4 sm:p-8 lg:p-12">
-        <!-- Contenedor principal oscuro -->
-        <div class="bg-gray-900 shadow-2xl rounded-2xl p-8 sm:p-10 max-w-4xl mx-auto mt-10 border border-gray-700">
-            
-            <!-- Título Principal (Color de acento claro) -->
-            <h1 class="text-5xl font-extrabold text-indigo-400 mb-4 text-center">
-                BOGOCARGO
-            </h1>
-            
-            <!-- Subtítulo y Misión (Texto claro) -->
-            <h2 class="text-xl font-semibold text-gray-400 mb-8 text-center border-b border-gray-700 pb-4">
-                La Plataforma Logística que Conecta Mayoristas y Minoristas en Bogotá
-            </h2>
-            
-            <!-- Descripción Detallada (Texto claro) -->
-            <div class="space-y-6 text-left text-gray-300">
-                <p class="text-lg">
-                    En BOGOCARGO, transformamos la distribución de mercancías en la capital. Somos el puente digital especializado en gestionar la logística de transporte entre las grandes empresas **Mayoristas** y los **Minoristas** que mueven el comercio diario de la ciudad.
-                </p>
-                <p class="text-lg">
-                    Nuestra plataforma optimiza las rutas, garantiza la seguridad de tu carga y asegura entregas rápidas y eficientes, ayudando a que tu negocio, ya sea creando o moviendo productos, se centre en lo que mejor sabe hacer: crecer.
-                </p>
-            </div>
-            
-            <!-- Sección de Llamada a la Acción -->
-            <div class="mt-10 pt-6 border-t border-gray-700 text-center">
-                {% if request.user.is_authenticated %}
-                    <!-- Botón para usuarios logueados (Color de acento) -->
-                    <a href="{% url 'frontend:dashboard' %}" class="inline-block px-10 py-3 bg-indigo-500 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-indigo-600 transition duration-300 transform hover:scale-105">
-                        Ir a mi Dashboard
-                    </a>
-                {% else %}
-                    <!-- Botón para visitantes (Color de acento secundario) -->
-                    <p class="text-gray-300 mb-4">Únete a nuestra red para empezar a enviar o transportar cargas.</p>
-                    <a href="{% url 'frontend:mi_cuenta' %}" class="inline-block px-10 py-3 bg-emerald-500 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-emerald-600 transition duration-300 transform hover:scale-105">
-                        Empezar Ahora (Acceso)
-                    </a>
-                {% endif %}
-            </div>
+    {% include 'FRONTEND/_header_publico.html' with active_page='index' %}
 
-            <!-- Muestra mensajes de Django (colores ajustados para fondo oscuro) -->
-            {% if messages %}
-            <div class="mt-8">
-                {% for message in messages %}
-                <div class="p-3 mb-3 text-sm rounded-lg 
-                    {% if message.tags == 'error' %}
-                        bg-red-900 text-red-300
-                    {% elif message.tags == 'success' %}
-                        bg-green-900 text-green-300
-                    {% elif message.tags == 'warning' %}
-                        bg-yellow-900 text-yellow-300
-                    {% else %}
-                        bg-blue-900 text-blue-300
-                    {% endif %}
-                ">
-                    {{ message }}
-                </div>
-                {% endfor %}
+    <main class="flex-grow">
+        
+        <div class="hero-bg bg-gray-900/90 py-24 sm:py-32 text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-5xl sm:text-7xl font-extrabold mb-4 tracking-tight">
+                    Logística Urbana Hecha Fácil
+                </h1>
+                <p class="text-xl sm:text-2xl font-light mb-8 max-w-3xl mx-auto">
+                    Conectamos el catálogo de mayoristas de Bogotá con minoristas y conductores, optimizando cada envío en la ciudad.
+                </p>
+                <a href="{% url 'frontend:mi_cuenta' %}" class="inline-block px-10 py-4 bg-indigo-600 text-white text-xl font-bold rounded-xl shadow-2xl hover:bg-indigo-700 transition duration-300 transform hover:scale-105">
+                    Empieza a PEDIR HOY
+                </a>
             </div>
-            {% endif %}
-
         </div>
+
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-extrabold text-gray-900 text-center mb-12">Nuestra Propuesta de Valor</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 transition duration-300 hover:shadow-xl">
+                        <div class="text-indigo-600 mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-900">Eficiencia en la Entrega</h3>
+                        <p class="text-gray-600">Minimizamos los tiempos de espera conectando tu mercancía con la red de transporte más cercana y óptima en Bogotá.</p>
+                    </div>
+
+                    <div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 transition duration-300 hover:shadow-xl">
+                        <div class="text-indigo-600 mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.018A9.955 9.955 0 0112 2c-3.738 0-6.825 2.223-8.087 5.288 1.488-.137 2.94-.136 4.34-.002a7.994 7.994 0 001.07-5.022 8 8 0 019.5 7.644z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-900">Seguimiento en Tiempo Real</h3>
+                        <p class="text-gray-600">Tanto mayoristas como minoristas pueden rastrear el estado exacto de su pedido desde el almacén hasta su destino final.</p>
+                    </div>
+
+                    <div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 transition duration-300 hover:shadow-xl">
+                        <div class="text-indigo-600 mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.667 0 3 1.333 3 3v1H9v-1c0-1.667 1.333-3 3-3zm0 0V3m-3 9H3m18 0h-6"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-gray-900">Soporte Local 24/7</h3>
+                        <p class="text-gray-600">Nuestro equipo está ubicado en Bogotá y conoce la ciudad, garantizando una resolución de problemas rápida y efectiva.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
+
+    {% include 'FRONTEND/_footer.html' %} 
+
 </body>
-</html>
 </html>

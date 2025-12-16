@@ -1,0 +1,88 @@
+{% load static humanize %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagar Factura #{{ factura.id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        .pago-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .metodo-pago:hover {
+            border-color: #10B981; /* green-500 */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include 'FRONTEND/_header.html' %}
+
+    <main class="container mx-auto p-6 sm:p-10">
+        <div class="max-w-4xl mx-auto">
+            
+            {# CORRECCIÓN: Cambiado 'pedido_id=' por 'pk=' para que coincida con urls.py #}
+            <a href="{% url 'frontend:detalle_pedido' pk=factura.orden.id %}"
+            class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 mb-6">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Volver al Pedido
+            </a>
+
+            <div class="bg-white pago-card rounded-2xl p-8 sm:p-10">
+                <h1 class="text-3xl font-extrabold text-gray-800 border-b pb-4 mb-6">
+                    💳 Procesar Pago - Factura #{{ factura.id|stringformat:"04d" }}
+                </h1>
+
+                {# Resumen de la Factura #}
+                <div class="mb-8 p-6 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                    <p class="text-lg font-semibold text-gray-800">Monto a Pagar:</p>
+                    <p class="text-4xl font-bold text-green-700 my-1">${{ factura.monto_total|intcomma }}</p>
+                    <p class="text-sm text-gray-600">Referencia: {{ factura.referencia }} | Vencimiento: {{ factura.fecha_vencimiento }}</p>
+                </div>
+
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Selecciona un Método de Pago</h2>
+
+                {# Formulario de Pago (Simulado) #}
+                <form method="POST" action="{% url 'frontend:manejar_pago_action' factura_id=factura.id %}" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        
+                        {# Opción 1: Tarjeta de Crédito/Débito #}
+                        <label for="pago-tarjeta" class="block p-5 border-2 rounded-xl cursor-pointer metodo-pago transition duration-200">
+                            <input type="radio" id="pago-tarjeta" name="metodo" value="TARJETA" class="mr-3 text-green-600 focus:ring-green-500" required>
+                            <span class="font-semibold text-gray-800">Tarjeta de Crédito / Débito</span>
+                            <p class="text-sm text-gray-500 mt-1">Visa, MasterCard, American Express.</p>
+                        </label>
+
+                        {# Opción 2: Transferencia Bancaria (PSE) #}
+                        <label for="pago-pse" class="block p-5 border-2 rounded-xl cursor-pointer metodo-pago transition duration-200">
+                            <input type="radio" id="pago-pse" name="metodo" value="PSE" class="mr-3 text-green-600 focus:ring-green-500" required>
+                            <span class="font-semibold text-gray-800">Transferencia Bancaria (PSE)</span>
+                            <p class="text-sm text-gray-500 mt-1">Débito directo desde su banco.</p>
+                        </label>
+                        
+                        {# Opción 3: Pago en Efectivo (Ej. OXXO/Baloto - si aplica) #}
+                        <label for="pago-efectivo" class="block p-5 border-2 rounded-xl cursor-pointer metodo-pago transition duration-200">
+                            <input type="radio" id="pago-efectivo" name="metodo" value="EFECTIVO" class="mr-3 text-green-600 focus:ring-green-500" required>
+                            <span class="font-semibold text-gray-800">Pago en Puntos Físicos</span>
+                            <p class="text-sm text-gray-500 mt-1">Generar código para pagar en un punto autorizado.</p>
+                        </label>
+                    </div>
+
+                    {# Botón de Continuar #}
+                    <button type="submit" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-150 mt-4">
+                        PAGAR ${{ factura.monto_total|intcomma }}
+                    </button>
+                    
+                    <p class="text-center text-xs text-gray-500">Al continuar, acepta nuestros términos y condiciones de pago.</p>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

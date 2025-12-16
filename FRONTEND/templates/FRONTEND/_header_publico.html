@@ -1,0 +1,38 @@
+<header class="bg-gray-800 shadow-xl border-b border-gray-700 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            
+            <div class="flex-shrink-0">
+                <a href="{% url 'frontend:index' %}" class="text-3xl font-extrabold tracking-widest text-white">
+                    BOGOCARGO
+                </a>
+            </div>
+
+            <nav class="flex space-x-6">
+                
+                <a href="{% url 'frontend:index' %}" 
+                class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-bold transition duration-150 {% if active_page == 'index' %}border-b-2 border-indigo-500{% else %}border-b-2 border-transparent{% endif %}">
+                    Inicio
+                </a>
+                
+                <a href="{% url 'frontend:servicios' %}" 
+                class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition duration-150 {% if active_page == 'servicios' %}border-b-2 border-indigo-500{% else %}border-b-2 border-transparent{% endif %}">
+                    Servicios
+                </a>
+
+                <a href="{% url 'frontend:mi_cuenta' %}" 
+                class="text-white hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition duration-150 border-b-2 border-transparent">
+                    Acceso / Registro
+                </a>
+                
+            </nav>
+
+            <div class="flex items-center">
+                <a href="{% url 'frontend:mi_cuenta' %}" 
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition duration-200 shadow-lg">
+                    Mi Cuenta
+                </a>
+            </div>
+        </div>
+    </div>
+</header>

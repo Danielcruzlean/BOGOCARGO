@@ -1,0 +1,42 @@
+<header class="bg-gray-800 shadow-xl p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-yellow-400 tracking-wider">
+        <i class="fas fa-tools me-2"></i> PANEL ADMIN
+    </h1>
+    
+    <nav>
+        <ul class="flex items-center space-x-4">
+            
+            <li>
+                <a href="{% url 'frontend:dashboard_admin' %}" class="text-gray-300 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-gray-700 {% if request.resolver_match.url_name == 'dashboard_admin' %}font-bold text-white bg-gray-700{% endif %}">
+                    Dashboard
+                </a>
+            </li>
+            
+            <li>
+                <a href="{% url 'frontend:usuarios_list' %}" class="text-gray-300 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-gray-700 {% if 'usuarios' in request.path %}font-bold text-white bg-gray-700{% endif %}">
+                    <i class="fas fa-users-cog me-1"></i> Usuarios
+                </a>
+            </li>
+            
+            <li>
+                <a href="{% url 'frontend:pedidos_crud_admin' %}" class="text-gray-300 hover:text-white transition duration-150 py-1 px-3 rounded-lg hover:bg-gray-700 {% if 'pedidos' in request.path and not 'usuarios' in request.path %}font-bold text-white bg-gray-700{% endif %}">
+                    <i class="fas fa-box me-1"></i> Pedidos
+                </a>
+            </li>
+
+            {% if user.is_authenticated %}
+            <li>
+                <span class="text-white text-sm font-medium border border-gray-600 rounded-full py-1 px-3 bg-gray-700">
+                    <i class="fas fa-user-shield me-1"></i> {{ user.username|default:"Admin" }}
+                </span>
+            </li>
+            
+            <li>
+                <a href="{% url 'frontend:logout' %}" class="text-red-400 hover:text-red-300 transition duration-150 py-1 px-3 rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-sign-out-alt me-1"></i> Salir
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>

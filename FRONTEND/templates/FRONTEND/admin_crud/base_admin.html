@@ -1,0 +1,11 @@
+{% extends 'FRONTEND/base.html' %} 
+
+{# 
+    Esta plantilla base es específica para las vistas de administración.
+    Hereda la estructura básica (head, scripts, etc.) de 'base.html',
+    pero sustituye el bloque 'navbar' con el menú exclusivo del admin.
+#}
+
+{% block navbar %}
+    {% include 'FRONTEND/includes/navbar_admin.html' %}
+{% endblock navbar %}

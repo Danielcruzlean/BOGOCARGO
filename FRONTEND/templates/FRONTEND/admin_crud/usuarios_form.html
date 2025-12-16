@@ -1,73 +1,93 @@
-{% extends 'FRONTEND/base.html' %} 
-
+{% extends 'FRONTEND/admin_crud/base_admin.html' %}
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i> {{ titulo }}</h4>
-                </div>
-                <div class="card-body">
-                    {% include 'FRONTEND/includes/messages.html' %} 
+<div class="flex justify-center pt-10 pb-10">
+    <div class="w-full max-w-4xl lg:max-w-3xl"> 
+        
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200">
+            
+            <div class="bg-indigo-700 p-4 sm:p-6 flex items-center justify-between">
+                <h4 class="text-xl sm:text-2xl font-semibold text-white">
+                    <i class="fas fa-user-edit mr-3"></i> {{ titulo }}
+                </h4>
+            </div>
+            
+            <div class="p-6 sm:p-8">
+                
+                {% include 'FRONTEND/includes/messages.html' %} 
 
-                    <form method="POST">
-                        {% csrf_token %}
+                <form method="POST" class="space-y-6">
+                    {% csrf_token %}
 
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email (Username)</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ usuario.email|default:'' }}" 
-                                {% if usuario %}readonly{% endif %} placeholder="ejemplo@bogocargo.com" required>
-                            {% if usuario %}
-                                <div class="form-text">El **email** no puede ser modificado después de la creación.</div>
-                            {% endif %}
-                        </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email (Username)</label>
+                        <input type="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 
+                            {% if usuario %}bg-gray-100 cursor-not-allowed{% endif %}" 
+                            id="email" name="email" value="{{ usuario.email|default:'' }}" 
+                            {% if usuario %}readonly{% endif %} placeholder="ejemplo@bogocargo.com" required>
+                        
+                        {% if usuario %}
+                            <p class="mt-2 text-sm text-gray-500">
+                                El **email** no puede ser modificado después de la creación.
+                            </p>
+                        {% endif %}
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="nombre" class="form-label">Nombre</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ usuario.nombre|default:'' }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="apellido" class="form-label">Apellido</label>
-                                <input type="text" class="form-control" id="apellido" name="apellido" value="{{ usuario.apellido|default:'' }}" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="tipo" class="form-label">Rol de Usuario (Tipo)</label>
-                            <select class="form-select" id="tipo" name="tipo" required>
-                                <option value="" disabled {% if not usuario %}selected{% endif %}>Seleccione un rol</option>
-                                {% for tipo in tipos_usuario %}
-                                    <option value="{{ tipo }}" 
-                                    {% if usuario and usuario.tipo == tipo %}selected{% endif %}>
-                                        {{ tipo|capfirst }}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                            <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                id="nombre" name="nombre" value="{{ usuario.nombre|default:'' }}" required>
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="password" class="form-label">Contraseña 
-                                {% if usuario %}(Dejar vacío para no cambiar){% endif %}
-                            </label>
-                            <input type="password" class="form-control" id="password" name="password" 
-                                {% if not usuario %}required{% endif %} placeholder="Ingresa la contraseña">
-                            {% if not usuario %}
-                                <div class="form-text">La contraseña es **requerida** solo para la creación.</div>
-                            {% endif %}
+                        <div>
+                            <label for="apellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                            <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                id="apellido" name="apellido" value="{{ usuario.apellido|default:'' }}" required>
                         </div>
+                    </div>
 
-                        <button type="submit" class="btn btn-success w-100 mb-2">
-                            <i class="fas fa-save me-1"></i> {% if usuario %}Actualizar Usuario{% else %}Crear Usuario{% endif %}
+                    <div>
+                        <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">Rol de Usuario (Tipo)</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg bg-white appearance-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                            id="tipo" name="tipo" required>
+                            
+                            <option value="" disabled {% if not usuario %}selected{% endif %}>Seleccione un rol</option>
+                            {% for tipo in tipos_usuario %}
+                                <option value="{{ tipo }}" 
+                                {% if usuario and usuario.tipo == tipo %}selected{% endif %}>
+                                    {{ tipo|capfirst }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                            Contraseña 
+                            {% if usuario %}<span class="text-sm font-normal text-gray-500">(Dejar vacío para no cambiar)</span>{% endif %}
+                        </label>
+                        <input type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                            id="password" name="password" 
+                            {% if not usuario %}required{% endif %} placeholder="Ingresa la contraseña">
+                        
+                        {% if not usuario %}
+                            <p class="mt-2 text-sm text-gray-500">
+                                La contraseña es **requerida** solo para la creación.
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="pt-4 space-y-3">
+                        <button type="submit" class="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <i class="fas fa-save mr-2"></i> {% if usuario %}Actualizar Usuario{% else %}Crear Usuario{% endif %}
                         </button>
-                        <a href="{% url 'frontend:usuarios_list' %}" class="btn btn-secondary w-100">
-                            <i class="fas fa-arrow-left me-1"></i> Cancelar y Volver a la Lista
+                        <a href="{% url 'frontend:usuarios_list' %}" class="block text-center w-full py-3 px-4 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 shadow-md">
+                            <i class="fas fa-arrow-left mr-2"></i> Cancelar y Volver a la Lista
                         </a>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

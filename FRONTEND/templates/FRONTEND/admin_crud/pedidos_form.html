@@ -1,0 +1,201 @@
+{% extends 'FRONTEND/admin_crud/base_admin.html' %} 
+{% load widget_tweaks %}
+{% block title %}
+    {% if is_update %}Editar Pedido BOCG-{{ pedido.id|stringformat:"05d" }}{% else %}Crear Pedido{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded-3 shadow-sm border-start border-5 border-primary">
+        <h2 class="h3 mb-0 text-dark">
+            {% if is_update %}
+                <i class="fas fa-edit me-2 text-primary"></i> Edición de Pedido <span class="text-primary">BOCG-{{ pedido.id|stringformat:"05d" }}</span>
+            {% else %}
+                <i class="fas fa-plus me-2 text-primary"></i> Crear Nueva Orden de Envío
+            {% endif %}
+        </h2>
+        <a href="{% url 'frontend:pedidos_crud_admin' %}" class="btn btn-outline-secondary shadow-sm fw-bold">
+            <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+        </a>
+    </div>
+
+    {% include 'FRONTEND/includes/messages.html' %}
+
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-dark text-warning p-3 h5">
+            Detalles de la Carga y Ruta
+        </div>
+        <div class="card-body p-4">
+
+            {% if is_update %}
+            <div class="alert alert-info border-info p-3 mb-4">
+                <h4 class="alert-heading h5"><i class="fas fa-info-circle me-2"></i> Detalles Actuales de la Orden</h4>
+                <p class="mb-1 fw-bold">
+                    <span class="text-secondary">Minorista:</span> {{ pedido.minorista.nombre }} {{ pedido.minorista.apellido }}
+                </p>
+                <p class="mb-0 fw-bold">
+                    <span class="text-primary">Estado Actual:</span> 
+                    <span class="badge rounded-pill fw-bold p-2 
+                        {% if pedido.estado == 'PENDIENTE' %}bg-warning text-dark
+                        {% elif pedido.estado == 'ASIGNADO' %}bg-info text-dark
+                        {% elif pedido.estado == 'EN_RUTA' %}bg-primary
+                        {% elif pedido.estado == 'ENTREGADO' %}bg-success
+                        {% elif pedido.estado == 'CANCELADO' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                        {# Uso seguro de la variable de estado #}
+                        {% if estado_display_limpio %}
+                            {{ estado_display_limpio }}
+                        {% else %}
+                            {{ pedido.estado|title }}
+                        {% endif %}
+                    </span>
+                </p>
+            </div>
+            {% endif %}
+
+            <form method="post" id="pedido-form">
+                {% csrf_token %}
+
+                <h3 class="text-xl font-weight-bold text-secondary border-bottom pb-2 mb-4">Datos de Envío y Asignación</h3>
+                <div class="row g-4 mb-4"> 
+                    
+                    {# Campo conductor #}
+                    <div class="col-md-6">
+                        <label for="{{ form.conductor.id_for_label }}" class="form-label fw-bold">Conductor Asignado</label>
+                        {{ form.conductor|add_class:"form-control" }}
+                        {% for error in form.conductor.errors %}
+                            <p class="text-danger small mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    
+                    {# Campo estado #}
+                    <div class="col-md-6">
+                        <label for="{{ form.estado.id_for_label }}" class="form-label fw-bold">
+                            Estado del Pedido <span class="text-danger">*</span>
+                        </label>
+                        {{ form.estado|add_class:"form-select" }}
+                        {% for error in form.estado.errors %}
+                            <p class="text-danger small mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    {# Campos origen y destino #}
+                    <div class="col-md-6">
+                        <label for="{{ form.origen.id_for_label }}" class="form-label fw-bold">
+                            Origen (Ciudad/Dirección) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.origen|add_class:"form-control" }}
+                        {% for error in form.origen.errors %}
+                            <p class="text-danger small mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="{{ form.destino.id_for_label }}" class="form-label fw-bold">
+                            Destino (Ciudad/Dirección) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.destino|add_class:"form-control" }}
+                        {% for error in form.destino.errors %}
+                            <p class="text-danger small mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-weight-bold text-secondary border-bottom pb-2 mb-4">Detalles de Mercancía</h3>
+                <div class="row g-4 mb-4">
+                    
+                    {# Campos peso_total, unidades, tipo_mercancia #}
+                    <div class="col-md-4">
+                        <label for="{{ form.peso_total.id_for_label }}" class="form-label fw-bold">
+                            Peso Total (Kg) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.peso_total|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="{{ form.unidades.id_for_label }}" class="form-label fw-bold">
+                            Número de Unidades <span class="text-danger">*</span>
+                        </label>
+                        {{ form.unidades|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="{{ form.tipo_mercancia.id_for_label }}" class="form-label fw-bold">
+                            Tipo de Mercancía <span class="text-danger">*</span>
+                        </label>
+                        {{ form.tipo_mercancia|add_class:"form-select" }}
+                    </div>
+                    
+                    {# Campos de dimensiones (largo, ancho, alto) #}
+                    <div class="col-12 mt-4">
+                        <h4 class="text-lg fw-bold text-muted border-bottom pb-1 mb-3">Dimensiones por Unidad (metros)</h4>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="{{ form.largo.id_for_label }}" class="form-label">Largo (m)</label>
+                        {{ form.largo|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="{{ form.ancho.id_for_label }}" class="form-label">Ancho (m)</label>
+                        {{ form.ancho|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="{{ form.alto.id_for_label }}" class="form-label">Alto (m)</label>
+                        {{ form.alto|add_class:"form-control" }}
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-weight-bold text-secondary border-bottom pb-2 mb-4">Fechas y Valoración</h3>
+                <div class="row g-4 mb-4">
+
+                    {# Campos fecha_recoleccion y precio_estimado #}
+                    <div class="col-md-6">
+                        <label for="{{ form.fecha_recoleccion.id_for_label }}" class="form-label fw-bold">
+                            Fecha de Recolección <span class="text-danger">*</span>
+                        </label>
+                        {{ form.fecha_recoleccion|add_class:"form-control" }}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="{{ form.precio_estimado.id_for_label }}" class="form-label fw-bold">
+                            Precio Estimado (COP) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.precio_estimado|add_class:"form-control text-end" }}
+                        <p class="text-muted small mt-1">Este es el valor final de la factura.</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-top d-flex justify-content-between align-items-center">
+                    <a href="{% url 'frontend:pedidos_crud_admin' %}" class="text-secondary fw-bold hover-link">
+                        <i class="fas fa-arrow-left me-1"></i> Volver a la Lista
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
+                        <i class="fas fa-save me-2"></i> {% if is_update %}Guardar Cambios{% else %}Crear Pedido{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pequeño script para asegurar que los campos de formulario Django tengan la clase 'form-control'
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('#pedido-form input, #pedido-form select, #pedido-form textarea').forEach(function(element) {
+            if (!element.classList.contains('form-control') && element.type !== 'submit' && element.tagName !== 'SELECT') {
+                element.classList.add('form-control');
+            }
+        });
+        document.querySelectorAll('#pedido-form select').forEach(function(element) {
+            if (!element.classList.contains('form-select')) {
+                element.classList.add('form-select');
+            }
+        });
+    });
+</script>
+
+{% endblock content %}
