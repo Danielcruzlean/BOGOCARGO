@@ -166,7 +166,7 @@ class CrearPedidoMinoristaForm(forms.ModelForm):
     def clean_origen(self):
         origen = self.cleaned_data.get('origen')
         if not origen or origen.strip() == '':
-            raise ValidationError("La dirección de origen es obligatoria.")
+            raise ValidationError("La dirección de origen es obligatoria. Asegúrese de haber seleccionado un Mayorista y que su dirección se haya cargado.")
         return origen
     
     def clean(self):
@@ -183,10 +183,11 @@ class CrearPedidoMinoristaForm(forms.ModelForm):
                 recoleccion_datetime = datetime.combine(fecha_recoleccion, hora_recoleccion)
                 cutoff_time = time(RECOLECCION_CUTOFF_HOUR, 0, 0)
                 cutoff_datetime = datetime.combine(today, cutoff_time)
-                if recoleccion_datetime > cutoff_datetime:
-                    self.add_error('hora_recoleccion', f"No puede ser posterior a las {RECOLECCION_CUTOFF_HOUR}:00.")
-                elif recoleccion_datetime < now:
+                
+                if recoleccion_datetime < now:
                     self.add_error('hora_recoleccion', "La hora seleccionada ya ha pasado.")
+                elif recoleccion_datetime > cutoff_datetime:
+                    self.add_error('hora_recoleccion', f"No puede ser posterior a las {RECOLECCION_CUTOFF_HOUR}:00 para recolección hoy.")
         return cleaned_data
 
 
