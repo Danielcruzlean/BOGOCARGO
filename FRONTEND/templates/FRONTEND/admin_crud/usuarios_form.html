@@ -54,12 +54,18 @@
                             id="tipo" name="tipo" required>
                             
                             <option value="" disabled {% if not usuario %}selected{% endif %}>Seleccione un rol</option>
+                            
+                            {# INICIO DE LA MODIFICACIÓN: Filtramos solo 'minorista' y 'conductor' #}
                             {% for tipo in tipos_usuario %}
-                                <option value="{{ tipo }}" 
-                                {% if usuario and usuario.tipo == tipo %}selected{% endif %}>
-                                    {{ tipo|capfirst }}
-                                </option>
+                                {% if tipo == 'minorista' or tipo == 'conductor' %}
+                                    <option value="{{ tipo }}" 
+                                    {% if usuario and usuario.tipo == tipo %}selected{% endif %}>
+                                        {{ tipo|capfirst }}
+                                    </option>
+                                {% endif %}
                             {% endfor %}
+                            {# FIN DE LA MODIFICACIÓN #}
+
                         </select>
                     </div>
                     
