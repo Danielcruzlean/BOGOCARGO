@@ -13,7 +13,8 @@ urlpatterns = [
     path('mi-cuenta/', views.mi_cuenta_view, name='mi_cuenta'),
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
-    path('logout/', views.logout_view, name='logout'),
+    # CORRECCIÓN: Cambiamos 'logout' por 'logout_view' si ese es el nombre que se usa en las plantillas.
+    path('logout/', views.logout_view, name='logout_view'), 
 
     # ----------------------------------------------------
     # 2. Recuperación de Contraseña (CORREGIDO)
